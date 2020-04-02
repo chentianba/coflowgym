@@ -2,6 +2,7 @@ package coflowsim.simulators;
 
 import java.util.Arrays;
 import java.util.Vector;
+import java.util.ArrayList;
 
 import coflowsim.datastructures.Flow;
 import coflowsim.datastructures.Job;
@@ -10,6 +11,7 @@ import coflowsim.datastructures.Task;
 import coflowsim.datastructures.Task.TaskType;
 import coflowsim.traceproducers.TraceProducer;
 import coflowsim.utils.Constants;
+import coflowsim.utils.Utils;
 import coflowsim.utils.Constants.SHARING_ALGO;
 
 /**
@@ -22,6 +24,8 @@ public class CoflowSimulatorDark extends CoflowSimulator {
   public static double JOB_SIZE_MULT = 10.0;
 
   Vector<Job>[] sortedJobs;
+
+  public ArrayList<Double> queueThresholds;
 
   /**
    * {@inheritDoc}
@@ -42,6 +46,15 @@ public class CoflowSimulatorDark extends CoflowSimulator {
     for (int i = 0; i < NUM_JOB_QUEUES; i++) {
       sortedJobs[i] = new Vector<Job>();
     }
+
+    this.queueThresholds = new ArrayList<Double>();
+    double k = INIT_QUEUE_LIMIT;
+    for (int i = 0; i < NUM_JOB_QUEUES-1; ++i) {
+        this.queueThresholds.add(k);
+        k = k * this.JOB_SIZE_MULT;
+    }
+    this.queueThresholds.add(Double.MAX_VALUE);
+    // System.out.println("Initial Thresholds: "+queueThresholds.toString());
   }
 
   /**
@@ -164,14 +177,16 @@ public class CoflowSimulatorDark extends CoflowSimulator {
    * </p>
    */
   private void updateJobOrder() {
+    Utils.log("sortedJobs(Before): "+Arrays.toString(sortedJobs));
     for (int i = 0; i < NUM_JOB_QUEUES; i++) {
       Vector<Job> jobsToMove = new Vector<Job>();
       for (Job j : sortedJobs[i]) {
         double size = j.shuffleBytesCompleted;
         int curQ = 0;
-        for (double k = INIT_QUEUE_LIMIT; k < size; k *= JOB_SIZE_MULT) {
-          curQ += 1;
-        }
+        // for (double k = INIT_QUEUE_LIMIT; k < size; k *= JOB_SIZE_MULT) {
+        //   curQ += 1;
+        // }
+        for (; this.queueThresholds.get(curQ) < size; curQ++);
         if (j.currentJobQueue < curQ) {
           j.currentJobQueue += 1;
           jobsToMove.add(j);
@@ -182,6 +197,7 @@ public class CoflowSimulatorDark extends CoflowSimulator {
         sortedJobs[i + 1].addAll(jobsToMove);
       }
     }
+    Utils.log("sortedJobs(After): "+Arrays.toString(sortedJobs));
   }
 
   /** {@inheritDoc} */
@@ -219,4 +235,18 @@ public class CoflowSimulatorDark extends CoflowSimulator {
       }
     }
   }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean setThreshold(double[] thresholds) {
+      this.queueThresholds.clear();
+    //   System.out.println("type:"+thresholds.getClass().getName()+" len:"+thresholds.length);
+      assert thresholds.length == (this.NUM_JOB_QUEUES-1);
+      for (int i = 0; i < NUM_JOB_QUEUES-1; ++i) {
+          queueThresholds.add(thresholds[i]);
+      }
+      queueThresholds.add(Double.MAX_VALUE);
+      return true;
+  }
+
 }

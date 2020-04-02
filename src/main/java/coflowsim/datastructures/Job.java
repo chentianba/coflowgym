@@ -207,7 +207,7 @@ public class Job implements Comparable<Job> {
    * {@link #calcAlphaDeadline(int, double)}.
    * 
    * @param numRacks
-   *          number of racks in the simulation
+   *          number of racks in the simulatactualStartTimeion
    * @param machinesPerRack
    *          number of machines in each rack
    * @param deadlineMult

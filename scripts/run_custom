@@ -1,0 +1,10 @@
+#!/bin/bash
+
+policy="DARK"
+if [ "$1" != "" ]; then
+	policy=$1
+fi
+
+mvn package
+
+java -cp target/coflowsim-*.jar coflowsim.CoflowSim $policy COFLOW-BENCHMARK ./test_trace.txt

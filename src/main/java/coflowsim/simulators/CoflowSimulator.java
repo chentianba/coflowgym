@@ -39,7 +39,7 @@ public class CoflowSimulator extends Simulator {
     super(sharingAlgo, traceProducer, offline, considerDeadline, deadlineMultRandomFactor);
     assert (sharingAlgo == SHARING_ALGO.FIFO || sharingAlgo == SHARING_ALGO.SCF
         || sharingAlgo == SHARING_ALGO.NCF || sharingAlgo == SHARING_ALGO.LCF
-        || sharingAlgo == SHARING_ALGO.SEBF);
+        || sharingAlgo == SHARING_ALGO.SEBF || sharingAlgo == SHARING_ALGO.DARK);
   }
 
   /** {@inheritDoc} */
@@ -96,6 +96,7 @@ public class CoflowSimulator extends Simulator {
   /** {@inheritDoc} */
   @Override
   protected void afterJobAdmission(long curTime) {
+    coflowsim.utils.Utils.log("sortedJobs: "+sortedJobs.toString());
     layoutFlowsInJobOrder();
     updateRatesDynamicAlpha(curTime, false);
   }

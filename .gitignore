@@ -8,3 +8,6 @@ release.properties
 .settings/
 .DS_Store
 .metadata/
+log/*
+logs/*
+*__pycache__*

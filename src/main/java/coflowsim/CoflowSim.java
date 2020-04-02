@@ -19,6 +19,7 @@ public class CoflowSim {
     SHARING_ALGO sharingAlgo = SHARING_ALGO.FAIR;
     if (args.length > curArg) {
       String UPPER_ARG = args[curArg++].toUpperCase();
+      System.out.println("sharingAlgo: "+UPPER_ARG);
 
       if (UPPER_ARG.contains("FAIR")) {
         sharingAlgo = SHARING_ALGO.FAIR;

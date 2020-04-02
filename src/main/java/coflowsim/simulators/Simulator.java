@@ -3,6 +3,7 @@ package coflowsim.simulators;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
+import java.util.ArrayList;
 
 import coflowsim.datastructures.Flow;
 import coflowsim.datastructures.Job;
@@ -10,6 +11,7 @@ import coflowsim.datastructures.JobCollection;
 import coflowsim.traceproducers.TraceProducer;
 import coflowsim.utils.Constants;
 import coflowsim.utils.Constants.SHARING_ALGO;
+import coflowsim.utils.Utils;
 
 /**
  * Abstract class for all schedulers.
@@ -36,6 +38,12 @@ public abstract class Simulator {
   protected long CURRENT_TIME = 0;
 
   private int numActiveTasks = 0;
+
+  /* Defined by chentb
+   * used in function Step()
+   */
+  private int curStepJob = 0;
+//   private int curStepTime = 0;
 
   /**
    * Constructor for Simulator.
@@ -157,11 +165,14 @@ public abstract class Simulator {
    *          simulator epoch length in milliseconds
    */
   public void simulate(int EPOCH_IN_MILLIS) {
+    // EPOCH_IN_MILLIS /= 10;
+    Utils.log("EPOCH_IN_MILLIS:"+EPOCH_IN_MILLIS);
     int curJob = 0;
     int TOTAL_JOBS = jobs.size();
 
     for (CURRENT_TIME = 0; CURRENT_TIME < Constants.SIMULATION_ENDTIME_MILLIS
         && (curJob < TOTAL_JOBS || numActiveTasks > 0); CURRENT_TIME += EPOCH_IN_MILLIS) {
+      Utils.log("\n=====> foreach current_time = "+CURRENT_TIME);
 
       int jobsAdded = 0;
 
@@ -192,9 +203,18 @@ public abstract class Simulator {
         afterJobAdmission(CURRENT_TIME);
       }
 
+    //   System.out.println("jobsAdded = "+jobsAdded);
+
+      Utils.log("Before Scheduling!");
+      for (Job t : activeJobs.values()) {
+        Utils.log(t.toString());
+      }
       for (long i = 0; i < EPOCH_IN_MILLIS; i += Constants.SIMULATION_QUANTA) {
+
         int numActiveJobs = activeJobs.size();
+
         if (numActiveJobs == 0) {
+        //   System.out.println("numActiveJobs==0 i="+i);
           break;
         }
 
@@ -211,9 +231,150 @@ public abstract class Simulator {
         if (numActiveJobs > activeJobs.size()) {
           afterJobDeparture(curTime);
         }
+        // System.out.println("i = "+i+" numActiveJobs="+numActiveJobs);
+      }
+
+      Utils.log("After Scheduling!");
+      for (Job t : activeJobs.values()) {
+        Utils.log(t.toString());
       }
     }
   }
+
+    public boolean prepareActiveJobs(int EPOCH_IN_MILLIS) {
+        int TOTAL_JOBS = jobs.size();
+        boolean done = false;
+        String obs = "";
+
+        if (curStepJob >= TOTAL_JOBS && numActiveTasks <= 0) {
+            done = true;
+            return true;
+        }
+        if (CURRENT_TIME >= Constants.SIMULATION_ENDTIME_MILLIS) {
+            done = true;
+            return true;
+        }
+
+        Utils.log("\n=====> current_step_time = "+CURRENT_TIME);
+
+        int jobsAdded = 0;
+        // ArrayList<Job> obsJobs = new ArrayList<Job>();
+
+        // Queue up all tasks in all jobs within SIMULATION_TIMESTEP
+        for (; curStepJob < TOTAL_JOBS; curStepJob++) {
+            Job j = jobs.elementAt(curStepJob);
+            if (j.actualStartTime > CURRENT_TIME + EPOCH_IN_MILLIS) {
+                break;
+            }
+
+            if (ignoreThisJob(j)) {
+                continue;
+            }
+
+            if (!admitThisJob(j)) {
+                System.err.println("SKIPPING " + j);
+                continue;
+            }
+
+            // One job added
+            j.wasAdmitted = true;
+            jobsAdded++;
+            uponJobAdmission(j);
+        }
+
+        // Stuff to do on new job arrival
+        if (jobsAdded > 0) {
+            afterJobAdmission(CURRENT_TIME);
+        }
+
+        for (Job j : activeJobs.values()) {
+            // obsJobs.add(j);
+        }
+        // System.out.println("activeJobs size: "+activeJobs.values().size());
+        return false;
+    }
+
+    /**
+     * Given a timestep and return "observation, reward, done, info".
+     * 
+     * @param STEP_IN_MILLIS
+     *      timestep toward a step.
+     * @return
+     *      whether this trace is completed.
+     */
+    public String step(int STEP_IN_MILLIS) {
+        int EPOCH_IN_MILLIS = STEP_IN_MILLIS; // / 10;
+        String completed = "";
+
+        // record jobs before scheduling
+        ArrayList<Job> beforeJobs = new ArrayList<Job>();
+        Utils.log("Before Scheduling!");
+        for (Job t : activeJobs.values()) {
+            Utils.log(t.toString());
+            beforeJobs.add(t);
+        }
+        Utils.log("here");
+
+        for (long i = 0; i < EPOCH_IN_MILLIS; i += Constants.SIMULATION_QUANTA) {
+
+            int numActiveJobs = activeJobs.size();
+
+            if (numActiveJobs == 0) {
+            //   System.out.println("numActiveJobs==0 i="+i);
+                break;
+            }
+
+            long curTime = CURRENT_TIME + i;
+            onSchedule(curTime);
+
+            // Print progress
+            if (curTime % Constants.SIMULATION_SECOND_MILLIS == 0) {
+                // System.err.printf("Timestep %6d: Running: %3d Started: %5d\n", (curTime / Constants.SIMULATION_SECOND_MILLIS), numActiveJobs, curStepJob);
+            }
+
+            // Stuff after job departures
+            if (numActiveJobs > activeJobs.size()) {
+                afterJobDeparture(curTime);
+            }
+            // System.out.println("i = "+i+" numActiveJobs="+numActiveJobs);
+        }
+
+        Utils.log("After Scheduling!");
+        for (Job t : activeJobs.values()) {
+            Utils.log(t.toString());
+        }
+
+        // create completed coflow info
+        completed += "completed: [";
+        for (Job j : beforeJobs) {
+            if (!activeJobs.values().contains(j)) {
+                completed += "(" + (j.jobID+", "+j.numMappers*j.numReducers+", "+j.totalShuffleBytes+", "+(j.getSimulatedDuration())) + "), "; // id, width, already bytes, duration time
+            }
+        }
+        completed += "]";
+
+        CURRENT_TIME += EPOCH_IN_MILLIS;
+
+        return completed;
+    }
+
+    /**
+     * Get a snapshot of coflow.
+     * @return
+     *      a string in JSON format.
+     */
+    public String getObservation(int STEP_IN_MILLIS) {
+        String obs = "";
+        Utils.log("Observation:");
+        obs += "Observation: [";
+        for (Job j : activeJobs.values()) {
+            // Utils.log(j.toString());
+            obs += "(" + (j.jobID+", "+j.numMappers*j.numReducers+", "+j.shuffleBytesCompleted+", "+(CURRENT_TIME+STEP_IN_MILLIS-j.simulatedStartTime)) + "), "; // id, width, already bytes, duration time
+        }
+        obs += "]";
+
+        return obs;
+    }
 
   /**
    * Stuff to do before each epoch for each job that has been admitted.
@@ -256,11 +417,12 @@ public abstract class Simulator {
    *          print if true
    * @return the total coflow completion time
    */
-  public double printStats(boolean doPrint) {
+  public String printStats(boolean doPrint) {
     double sumDur = 0.0;
     int admitCount = 0;
     int ignoreCount = 0;
     int metDeadlineCount = 0;
+    String resStats = "";
 
     for (Job j : jobs) {
       if (ignoreThisJob(j)) {
@@ -286,21 +448,24 @@ public abstract class Simulator {
       }
 
       if (doPrint) {
-        System.out.println(j.jobName + " " + j.simulatedStartTime + " " + j.simulatedFinishTime
+        String res = (j.jobName + " " + j.simulatedStartTime + " " + j.simulatedFinishTime
             + " " + j.numMappers + " " + j.numReducers + " " + j.totalShuffleBytes + " "
             + j.maxShuffleBytes + " " + jDur + " " + Math.round(j.deadlineDuration) + " "
             + j.simulatedShuffleIndividualSums);
+        resStats += (res + "\n");
+        // System.out.println(res);
       }
     }
 
-    if (doPrint) {
-      System.out.println(sumDur);
+    if (true){//doPrint) {
+      resStats += sumDur;
+    //   System.out.println(sumDur);
       if (considerDeadline) {
         System.out.println(metDeadlineCount + "/" + admitCount + " " + ignoreCount);
       }
     }
 
-    return sumDur;
+    return resStats;
   }
 
   public void incNumActiveTasks() {
@@ -318,4 +483,42 @@ public abstract class Simulator {
    *          job to remove
    */
   protected abstract void removeDeadJob(Job j);
+
+  public boolean setThreshold(double[] thresholds) {
+      return false;
+  }
+
+  public String getMLFQInfo() {
+    double sumDur = 0.0;
+    String resStats = "";
+
+    for (Job j : activeJobs.values()) {
+        ;
+    }
+
+    for (Job j : jobs) {
+        if (ignoreThisJob(j)) {
+            continue;
+        }
+
+        double jDur = j.getSimulatedDuration();
+        sumDur += jDur;
+
+        boolean metDeadline = false;
+        if (jDur - j.deadlineDuration < 100
+            || ((jDur / 8.0) / (j.deadlineDuration * 128.0 / 1000.0)) - 1.0 < 0.03) {
+            metDeadline = true;
+        }
+
+        String res = (j.jobName + " " + j.simulatedStartTime + " " + j.simulatedFinishTime
+            + " " + j.numMappers + " " + j.numReducers + " " + j.totalShuffleBytes + " "
+            + j.maxShuffleBytes + " " + jDur + " " + Math.round(j.deadlineDuration) + " "
+            + j.simulatedShuffleIndividualSums);
+        resStats += (res + "\n");
+    }
+
+    resStats += sumDur;
+    // System.out.println(sumDur);
+    return "Info";
+  }
 }

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+policy="dark"
+if [ "$1" != "" ]; then
+	policy=$1
+fi
+
+mvn package
+
+# java -cp target/coflowsim-*.jar coflowsim.CoflowGym $policy COFLOW-BENCHMARK /home/chentb/tmp/git/coflow-benchmark/FB2010-1Hr-150-0.txt
+java -cp target/coflowsim-*.jar coflowsim.CoflowGym $policy COFLOW-BENCHMARK 100coflows.txt

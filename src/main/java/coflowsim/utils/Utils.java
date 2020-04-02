@@ -34,4 +34,10 @@ public class Utils {
     }
     return sum;
   }
+
+  public static void log(String str) {
+      if (!true) {
+        System.out.println(str);
+      }
+  }
 }
