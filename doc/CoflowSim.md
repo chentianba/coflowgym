@@ -90,6 +90,8 @@
 **RACK_BYTES_PER_SEC**：带宽为128Mbps  
 **RACK_BITS_PER_SEC**：带宽为1Gbps  
 
+CoflowSim的网络传输带宽是1Gbps=128MBs，以10*1024毫秒作为一个调度时间间隔
+
 ## CoflowGym
 
 CoflowGym设计上的考虑有：
@@ -112,6 +114,9 @@ MLFQ的阈值的作用是根据Coflow大小将Coflow划分为不同的级别
 
 ### action format
 
+使用K=10个队列，队列的初始阈值为INIT=1M=1024×1024，第1个队列阈值为INIT×a1，第二个队列阈值为INIT×a1×a2，...，第9个队列阈值为INIT×a1×a2×...×a9，第K=10个队列阈值就为MAX_VALUE。
+因此优化的参数就为{a1, a2, ..., a9}共K-1=9个动作参数
+
 > **动作的设计**为（MLFQ的阈值）
 
 ## reward design
@@ -130,6 +135,19 @@ MLFQ的阈值的作用是根据Coflow大小将Coflow划分为不同的级别
 
 
 > **奖励函数的设计**为相邻step的已完成Coflow平均完成时间之比
+
+### CoflowBenchmark
+
+| Unit | Inter-coflow | Clairvoyant | Time |
+| -- | -- | -- | -- |
+| flow | FAIR |  | 3.7131824E7 |
+| flow | PFP| | 5.2216912E7 |
+| coflow | FIFO| Yes | 4.3473352E7 |
+| coflow | SCF(SJF) | Yes | 1.5578368E7 |
+| coflow | NCF(NJF) | Yes | 2.1937472E7 |
+| coflow | LCF(LJF) | Yes | 1.61236E7 |
+| coflow | SEBF | Yes | 1.5005968E7 |
+| | DARK | No | 2.4247392E7 |
 
 ### algorithm design
 
@@ -163,7 +181,7 @@ MLFQ的阈值的作用是根据Coflow大小将Coflow划分为不同的级别
 
 ## 算法调试
 
-问题一：输出的动作是极大值或者极小值
+**问题一**：输出的动作是极大值或者极小值
 1. 输入没有标准化、归一化，各维度数值数量级差异较大
 2. 激活函数使用tanh，网络过深导致tanh求导为0,而无法学习，减少Actor、Critic的隐藏层
 
@@ -184,15 +202,21 @@ ReLU函数：构建稀疏矩阵，也就是稀疏性，也就是大多数为0的
 ReLU不需要输入归一化来防止达到饱和，卷积神经网络大多使用ReLU函数。
 * [如何选取激活函数](https://blog.csdn.net/kongxp_1/article/details/80726409)
 
-问题二：当前一个episode是用完整的benchmark回放，训练效率低。
+**问题二**：当前一个episode是用完整的benchmark回放，训练效率低。
 原因：在训练周期里没有引入前期的训练评价机制，应当采取训练评价，动态增加episode。
 
 总结1：折扣因子gamma和episode的长度息息相关。折扣因子是眼前利益和长远利益的权衡因子，gamma越大，agent越重视长远利益，episode靠后状态对episode靠前的状态影响就越大，需要更长的训练次数才能使神经网络agent适应未来的回报，考虑到神经网络、DRL的不稳定，训练难度就越大；同时，episode越长，神经网络收敛的难度就越大。
 
-> 问题三：agent在探索期间，探索不到好的动作，导致长时间训练无法收敛，收敛时往往收敛到很差的结果
+**问题三**：agent在探索期间，探索不到好的动作，导致长时间训练无法收敛，收敛时往往收敛到很差的结果
 实验：将这种算法的参数配置运用到MountainCar-continuous-v0的环境中，通过对比他人成功的案例，发现关键点是噪声的设置
-原因：
+原因：在Pendulum-v0例子中，因为状态空间比较小，所以使用衰减很快的高斯分布也能在前期探索整个状态空间，当状态空间扩大，在MountainCar的例子中，使用这种衰减较快的高斯噪声就很难对状态空间进行有效探索，因此，当调节噪声的衰减速度、增大agent的探索时长，就会使agent能充分探索整个状态空间。
 
+**高斯噪声**（TD3）是时序不相关的，前一步和后一步选取动作时噪声是独立的；
+**Ornstein-Uhlenbeck噪声**（DDPG）是时序相关的，常用于惯性系统中，OUNoise是自相关的，后一步的噪声受前一步的影响。
+![](./img/ounoise_gaussian.png)
+从图中可以看出，OUNoise往往不会像高斯噪声一样相邻两步的值差别很大，而是会绕着均值附近正向或负向探索一段距离，这有利于在一个方向上探索探索的更远。相比于独立噪声，OU噪声适合时间离散化粒度较小的情况，在采样时间较大的时候，即使是独立的噪声，动作带来的效果也很容易被验证，从而可以快速调整策略，而采样时间小时，自相关噪声走连续的几步才能得到验证，调整周期也更长。
+
+* [强化学习中Ornstein-Uhlenbeck噪声是鸡肋吗？](https://zhuanlan.zhihu.com/p/96720878)
 
 
 补充阅读：  
@@ -204,7 +228,7 @@ ReLU不需要输入归一化来防止达到饱和，卷积神经网络大多使�
 ## DDPG调参资料
 1. [(DDPG)深度确定策略梯度调参体会](https://blog.csdn.net/qq_32231743/article/details/73770055)
 2. [DDPG在连续运动控制中的一点记录](http://blog.sina.com.cn/s/blog_59dd8a360102x7k6.html)
-3. [基于DDPG的TORCS自动驾驶训练笔记(二)](https://zhuanlan.zhihu.com/p/57755078)：其中的episode终止条件值得参考
+3. [基于DDPG的TORCS自动驾驶训练笔记(二)](https://zhuanlan.zhihu.cgengchangom/p/57755078)：其中的episode终止条件值得参考
 4. [深度确定性策略梯度算法，越训练效果越差？](https://www.zhihu.com/question/61035679/answer/183232526)：对动作进行人工评判，分类存储在不同的buffer中，在好的环境中就能学到好动作，坏环境中学到坏动作
 5. [深度强化学习落地方法论（7）—— 训练篇](https://zhuanlan.zhihu.com/p/99901400)：数据预处理reward rescale、折扣因子的取值原则是在算法能够收敛的前提下尽可能大、agent“看得远”表面上指的是向前考虑的步数多实质上是指agent向前考虑的系统动态演化跨度大；如果之前的经验对当前决策很有参考意义（比如Dota）就适合用RNN，反之仅依靠即时信息做应激式决策就足以应付就没必要用RNN。实践中经常采取折中方案，将最近几个step的原始状态信息叠加到一起作为当前时刻的实际状态信息输入policy，既可以挖掘一定范围内的时序信息，又避免增加训练难度。
 6. [Soft Actor-Critic算法](https://zhuanlan.zhihu.com/p/70360272)

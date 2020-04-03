@@ -242,10 +242,13 @@ public class CoflowSimulatorDark extends CoflowSimulator {
       this.queueThresholds.clear();
     //   System.out.println("type:"+thresholds.getClass().getName()+" len:"+thresholds.length);
       assert thresholds.length == (this.NUM_JOB_QUEUES-1);
+      double k = INIT_QUEUE_LIMIT/10;
       for (int i = 0; i < NUM_JOB_QUEUES-1; ++i) {
-          queueThresholds.add(thresholds[i]);
+          k = k*thresholds[i];
+          queueThresholds.add(k);
       }
       queueThresholds.add(Double.MAX_VALUE);
+    //   System.out.println(queueThresholds.toString());
       return true;
   }
 

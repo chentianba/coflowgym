@@ -193,11 +193,11 @@ public class CoflowGym {
         System.out.println(Arrays.toString(thresholds));
         for (int k = 0; k < 2; ++k) {
             gym.reset();
-            for (int i = 0;; ++i) {
-                boolean res = gym.toOneStep();
+            for (int i = 0;i < 400; ++i) {
+                String res = gym.toOneStep(thresholds);
                 // System.out.println("Step: "+res);
                 gym.takeAction(thresholds);
-                if (res) break;
+                // if (res) break;
             }
             System.out.println("\nResult: ");
             gym.printStats();

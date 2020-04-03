@@ -361,7 +361,9 @@ public abstract class Simulator {
     /**
      * Get a snapshot of coflow.
      * @return
-     *      a string in JSON format.
+     *      a string in JSON format about (id, width, sent bytes, duration time)
+     *   sent bytes: unit is B(byte)
+     *   duration time: unit is milli second, a second = 1024 milli second
      */
     public String getObservation(int STEP_IN_MILLIS) {
         String obs = "";
