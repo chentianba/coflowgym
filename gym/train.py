@@ -6,7 +6,8 @@ from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
 from util import get_h_m_s, get_now_time
 
-if 
+if not os.path.exists("./models"):
+    os.mkdir("./models")
 MODEL_DIR = "./models/"+get_now_time()
 
 def loop(env):
@@ -87,6 +88,8 @@ def destroy_env():
     shutdownJVM()
 
 if __name__ == "__main__":
+    if not os.path.exists("./log/"):
+        os.mkdir("./log/")
     file = open("log/log.txt", "w")
     sys.stdout = file
 
