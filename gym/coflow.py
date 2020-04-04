@@ -5,7 +5,7 @@ from algo.ddpg import DDPG
 from algo.ddpg import OUNoise
 import numpy as np
 import json
-import math
+import math, sys
 
 
 class CoflowSimEnv(Env):
@@ -161,6 +161,8 @@ def loop(env):
 
 
 if __name__ == "__main__":
+    sys.stdout = open("log/log.txt", "a")
+
     # Configure the jpype environment
     jarpath = os.path.join(os.path.abspath("."))
     startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=%s/target/coflowsim-0.2.0-SNAPSHOT.jar"%(jarpath), convertStrings=False)
