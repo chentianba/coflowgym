@@ -6,6 +6,9 @@ from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
 from util import get_h_m_s, get_now_time
 
+if 
+MODEL_DIR = "./models/"+get_now_time()
+
 def loop(env):
     """Coflow Environment
     """
@@ -27,7 +30,6 @@ def loop(env):
     ave_rs = []
 
     begin_time = time.time()
-    dir = "./models/"+get_now_time()
 
     for episode in range(1, 1000):
         obs = env.reset()
@@ -60,8 +62,8 @@ def loop(env):
                 print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
                 sys.stdout.flush()
                 break
-        if PERIOD_SAVE_MODEL and episode%20 == 0:
-            model_name = "%s/model_%s.ckpt"%(dir, episode)
+        if PERIOD_SAVE_MODEL and episode%2 == 0:
+            model_name = "%s/model_%s.ckpt"%(MODEL_DIR, episode)
             agent.save(model_name)
 
     env.close()
@@ -74,7 +76,7 @@ def config_env():
 
     java.lang.System.out.println("Hello World!")
     testfile = "/home/chentb/project/coflowgym/scripts/100coflows.txt"
-    benchmark = "/home/chentb/tmp/git/coflow-benchmark/FB2010-1Hr-150-0.txt"
+    benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     CoflowGym = JClass("coflowsim.CoflowGym")

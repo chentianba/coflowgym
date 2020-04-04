@@ -7,9 +7,9 @@ def get_h_m_s(second):
     """
     if second <= 0:
         return 0, 0, 0
-    m, s = divmod(second, 60)
+    m, s = divmod(round(second), 60)
     h, m = divmod(m, 60)
-    return "%sH%sM%sS"%(h, m, s)
+    return "%sH %sM %sS"%(h, m, s)
 
 def get_now_time():
     now = datetime.now()
