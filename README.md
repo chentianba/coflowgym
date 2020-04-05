@@ -74,3 +74,4 @@ Please refer to/cite the following papers based on the scheduler you are using: 
 环境：python3.5.6
 * pip: requirements.txt
 * conda: 
+> jpype: pip install jpype1

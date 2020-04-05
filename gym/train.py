@@ -21,7 +21,7 @@ def loop(env):
 
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
-    oun = OUNoise(a_dim, mu=0.4)
+    oun = OUNoise(a_dim, mu=0)
 
     epsilon = 1
     EXPLORE = 70
@@ -63,7 +63,7 @@ def loop(env):
                 print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
                 sys.stdout.flush()
                 break
-        if PERIOD_SAVE_MODEL and episode%2 == 0:
+        if PERIOD_SAVE_MODEL and episode%10 == 0:
             model_name = "%s/model_%s.ckpt"%(MODEL_DIR, episode)
             agent.save(model_name)
 
@@ -76,7 +76,7 @@ def config_env():
     startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=%s/target/coflowsim-0.2.0-SNAPSHOT.jar"%(jarpath), convertStrings=False)
 
     java.lang.System.out.println("Hello World!")
-    testfile = "/home/chentb/project/coflowgym/scripts/100coflows.txt"
+    testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0

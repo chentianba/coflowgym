@@ -12,3 +12,5 @@ release.properties
 log/*
 logs/*
 *__pycache__*
+*log*.txt
+models/*
