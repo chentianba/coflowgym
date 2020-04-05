@@ -8,5 +8,10 @@ ep_r = [11535.382028444536, 10702.34447044366, 10689.905096658767, 10634.0462967
 plot_compare(result, ep_r)
 plt.show()
 
+def f():
+    pass
+    import math
+    math.lo
+
 if __name__ == "__main__":
     pass
