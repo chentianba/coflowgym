@@ -57,6 +57,11 @@ public class CoflowGym {
         return obs;
     }
 
+    /**
+     * return info of scheduling in Benchmark
+     * @return
+     *      return the sum of every job duration in Benchmark
+     */
     public String printStats() {
         return this.simulator.printStats(false);
         // System.out.println(this.simulator instanceof CoflowSimulatorDark);
