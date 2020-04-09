@@ -79,7 +79,7 @@ def config_env():
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym)
