@@ -45,10 +45,58 @@ class CoflowSimEnv(Env):
         completed = result["completed"]
         a_coflows = eval(result["observation"].split(":")[-1])
         c_coflows = eval(completed.split(":")[-1])
-        reward = self.__calculate_reward(a_coflows, c_coflows)
+        # reward = self.__calculate_reward(a_coflows, c_coflows)
+        reward = self.__cal_reward_2(a_coflows, c_coflows)
+        # reward = self.__cal_reward_3(a_coflows, c_coflows)
+
+        print("completed: ", [coflow[0] for coflow in c_coflows])
         
         return obs, reward, done, {}
     
+    def __cal_reward_3(self, a_coflows, c_coflows):
+        total_time = 0
+        for coflow in a_coflows:
+            total_time += (coflow[-1]/1024)
+        for coflow in c_coflows:
+            total_time += (coflow[-1]/1024)
+        n = len(a_coflows)+len(c_coflows)
+        if n == 0:
+            acct = 0
+        else:
+            acct = total_time/n
+        diff = acct - self.old_ave_duration
+        self.old_ave_duration = acct
+        if diff >= 0:
+            r = math.log(diff+1)*10
+        else:
+            r = -math.log(-diff+1)
+        return r
+    
+    def __cal_reward_2(self, a_coflows, c_coflows):
+        ### calculate the average duration about active coflows
+        total_duration = 0
+        for coflow in c_coflows:
+            total_duration += coflow[-1]/1024
+        for coflow in a_coflows:
+            total_duration += coflow[-1]/1024 # unit is second
+        n_coflow = len(a_coflows) + len(c_coflows)
+        if n_coflow == 0:
+            ave_duration = 0
+        else:
+            ave_duration = total_duration / n_coflow
+        diff = ave_duration - self.old_ave_duration
+        self.old_ave_duration = ave_duration
+
+        ### 2. calculate the reward about active coflows
+        ### range is [-5, 5]
+        r_a = 0
+        if diff >= 0:
+            r_a = -np.clip(math.log(diff + 1), 0, 10)
+        else:
+            r_a = np.clip(math.log(-diff + 1), 0, 100)
+        return r_a
+        
+
     def __calculate_reward(self, a_coflows, c_coflows):
         # print("active: ", a_coflows, "completed: ", c_coflows)
 

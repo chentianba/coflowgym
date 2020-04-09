@@ -46,4 +46,5 @@ def cal_limit(file):
         return width, size
 
 if __name__ == "__main__":
-    print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
+    # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
+    pass

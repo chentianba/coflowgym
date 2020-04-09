@@ -13,6 +13,14 @@
 | coflow | SEBF | Yes | 1.5005968E7 |
 | | DARK | No | 2.4247392E7 |
 
+## test100
+使用前100个coflow做简便的计算
+| Unit | Inter-coflow | Clairvoyant | Time |
+| -- | -- | -- | -- |
+| coflow | FIFO| Yes | 612776.0 |
+| coflow | SEBF | Yes | 281880.0 |
+| | DARK | No | 326688.0 |
+
 ## 实验机器性能评估
 指标：以一个episode的运行时间
 * 本机Ubuntu：7分  
@@ -21,7 +29,16 @@
     配置为Intel(R) Xeon(R) Gold 5118 CPU@2.30GHz的虚拟机
 * 树涵提供的benchvm：8分多  
 
-## 日志文件
+## 对标实验分析
+
+### Benchmark数据分析
+
+### DARK分析
+持续时间等于结束时间-开始时间
+### SEBF分析
+
+
+## 日志文件分析
 
 ### 第一次实验设置
 日志文件：1_log.txt、2_log.txt
@@ -55,11 +72,11 @@
 若rate > 1时， reward = clip(rate\*10, 0, 100)
 
 
-将Benchmark的一次完整运行作为一个episode，在一个episode内，由于调度的动态性，每个step完成的coflow不尽相同，在每个step处缺乏一个统一的评价标准，只有在episode结束时才能对优化目标进行评价，即将整个Benchmark的coflow平均完成时间作为评价标准。
+将Benchmark的一次完整运行作为一个episode，在一个episode内，由于调度的动态性，每个step完成的coflow不尽相同，在每个step处缺乏一个统一的评价标准，只有在episode结束时才能对优化目标进行评价，即将整个Benchmark的coflow平均完成时间作为评价标准。（在实验中Benchmark的coflow的平均完成时间用所有coflow的完成时间之和来表示）
 
 将一个episode作为一个评价单位，有两种评价指标：episode的累积奖励值和Benchmark的coflow平均完成时间，显然第二种评价方式更加精确，这类似于MountainCar中的episode累计奖励值和episode步数。因此，我们可以使用第二种指标——Benchmark的coflow平均完成时间（准确）来评价第一种指标——episode累积奖励值（不准确）。
 
-两次实验的日志文件1_log.txt、2_log.txt中分别包含287、181个episode，episode累积奖励值(ep_reward)和Benchmark的运行时间(ep_runtime)对比如下图所示。
+两次实验的日志文件1_log.txt、2_log.txt中分别包含287、181个episode，episode累积奖励值(ep_reward)和Benchmark的coflow完成时间之和(ep_runtime)对比如下图所示。
 
 ![未加载](/doc/img/log1_2_validate_reward.png)
 可以看出，
@@ -96,15 +113,17 @@
 #### 参数优化
 将OU噪声的平均值mu设为0（以前为0.4）  
 其他同第一次实验，效果图如下：
-![未加载](/doc/log/exp2_compare.png)
+![未加载](/doc/img/exp2_compare.png)
 
 #### 其他优化
 同第一次实验
 
 ### 第三次实验设置
-
+日志文件：4_log.txt(alpha=0.6)、5_log.txt(alpha=1)、1_log_100.txt(alpha=0, 100coflows)、6_log.txt(alpha=0)
 #### 状态设计
+同第一次实验
 #### 动作设计
+同第一次实验
 #### 奖励函数设计
 由于设计的`吞吐量之比`奖励函数效果不明显，因此重新设计了奖励函数：
 1. 对相邻step的吞吐量指标，加重了惩罚力度和奖励力度，表现为：
@@ -117,13 +136,61 @@
     当Tput(t-1)不为0时，定义rate = Tput(t)/Tput(t-1)  
     若rate <= 1，reward = rate-1  
     若rate > 1时， reward = clip(log(rate, 1.15), 0, 20)
-2. 增加了相邻step的平均持续时间指标，持续时间是活动coflow的属性，一个coflow持续时间越长，在一定程度上说明其大小越大，平均持续时间越短，coflow的大小也就越小，这时给正向的奖励可以使得agent学会优先调度小的coflow。
+2. 增加了step的平均持续时间指标，持续时间是活动coflow的属性，一个coflow持续时间越长，在一定程度上说明其大小越大，平均持续时间越短，coflow的大小也就越小，这时给正向的奖励可以使得agent学会优先调度小的coflow。
     > 定义diff为相邻平均持续时间之差：  
     当diff>=0时，reward = -clip(log(diff+1), 0, 5)
     当diff<0时，reward = clip(log(-diff+1), 0, 5)
 3. 最后使用一个比例因子alpha=0.6（吞吐量权重大些）将两者综合
+
+该实验分为：alpha=0.6和alpha=1,实验结果为：
+![未加载](/doc/img/exp3_compare.png)
+实验分析：
+* 可以看出，两种alpha取值的结果都不好，尽管agent在早期有好的探索结果，但是慢慢地都向坏的方向收敛。
+* 可以看出，奖励函数的效果也不理想。在两种设置中，ep_runtime < 0.3时，累积奖励勉强有负线性关系，但是数据量较少；当ep_runtime > 0.3时，ep_runtime的累计奖励呈正线性关系，这说明我们的奖励函数设计的还是不合理，尤其是当alpha=1时奖励函数的效果不理想，说明我们第一部分对完成coflow设置的奖励不合理。
+> 总结：一个合适的奖励函数设置需要对环境充分地剖析，理解当前环境状态的好坏，给出定义这种好坏程度的规则。在coflow调度的环境中，使用“吞吐量”作为对coflow调度的评价指标不太合适，因为一个coflow中包含很多条流，coflow调度的中存在很多个吞吐量瓶颈，而不是某单一链路的吞吐量瓶颈，因此使用coflow的整体大小和持续时间定义的coflow吞吐量是不合适的。
+
+当alpha=0时，在小数据集（前100个coflow）和Benchmark上的结果为：
+![未加载](/doc/img/exp3_alpha_0.png)
+实验分析：
+* 从图中可以看出，无论是在小数据集（前100个coflow）上，还是在Benchmark上，累积奖励是随着coflow平均完成时间的增加而减小的，可以说明“step的平均持续时间”这个指标设计奖励函数是合适的。
+* 对一个coflow来说，其持续时间越长，在一定程度上说明其大小越大，而通过设置相邻平均持续时间之差作为奖励值，平均持续时间降低，说明有coflow被完成，应该给予正向奖励鼓励这种行为，反之就该给予惩罚。
+* step的平均持续时间这个指标是和我们的优化目标`降低平均coflow完成时间`相关的，当coflow未完成时，coflow完成时间对应的指标就是coflow持续时间，因此通过coflow平均持续时间的变化反应了coflow完成时间的变化。
+
+#### 参数优化
+同第一次实验
+#### 其他优化
+同第一次实验
+
+### 第四次实验设置
+
+#### 状态设计
+同第一次实验
+#### 动作设计
+同第一次实验
+#### 奖励函数设计
+参考[深度强化学习落地方法论（6）—— 回报函数篇](https://zhuanlan.zhihu.com/p/97032357)
+* 弄清楚主线任务——优化目标，对主线任务设置正向奖励，其他辅助奖励都是惩罚项
+* 使用credit assignment对主线奖励进行分解，提高对负样本的利用
+* 要保证主线奖励的核心地位，不能让惩罚项喧宾夺主，惩罚项的绝对值要小一些
+
+再次分析优化目标和奖励函数之间的联系：
+* 我们的优化目标是**降低平均coflow完成时间**
+* 直接分析：在Benchmark中，平均coflow完成时间 = coflow完成时间之和；但是在单步中，`完成coflow的完成时间和活动coflow的持续时间`之和可以表示coflow完成时间之和
+* 更进一步，把单步的完成时间和持续时间综合为平均持续时间，使用相邻step的平均持续时间之差作为奖励信号
+
+#### 参数优化
+同第一次实验
+#### 其他优化
+同第一次实验
+
+### 第×××次实验设置
+
+#### 状态设计
+#### 动作设计
+#### 奖励函数设计
 #### 参数优化
 #### 其他优化
+
 
 ### 第×××次实验设置
 
