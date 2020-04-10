@@ -162,7 +162,7 @@
 同第一次实验
 
 ### 第四次实验设置
-
+日志文件：2_log_100.txt（100coflows）、7_log.txt
 #### 状态设计
 同第一次实验
 #### 动作设计
@@ -177,6 +177,14 @@
 * 我们的优化目标是**降低平均coflow完成时间**
 * 直接分析：在Benchmark中，平均coflow完成时间 = coflow完成时间之和；但是在单步中，`完成coflow的完成时间和活动coflow的持续时间`之和可以表示coflow完成时间之和
 * 更进一步，把单步的完成时间和持续时间综合为平均持续时间，使用相邻step的平均持续时间之差作为奖励信号
+
+奖励函数设计：
+1. 计算完成coflow完成时间和活跃coflow持续时间的平均值ave_duration；若coflow数量为0，ave_duration=0；
+2. 计算相邻step平均持续时间之差diff=ave_duration(t)-ave_duration(t-1);
+3. 若diff >= 0，则reward = -clip(log(diff+1), 0, 10);
+4. 若diff < 0，则reward = clip(log(-diff+1), 0, 100)。
+实验结果为：
+![未加载](/doc/img/exp4_validate.png)
 
 #### 参数优化
 同第一次实验

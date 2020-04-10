@@ -137,7 +137,7 @@ def validate_reward(result, ep_reward, newfigure=True):
     plt.ylabel("ep_total_reward")
 
 def analyse_log():
-    exp_no = -3
+    exp_no = 4
 
     if exp_no == 1:
         res1, ep_r1 = parse_log("doc/log/1_log.txt")
@@ -152,7 +152,6 @@ def analyse_log():
         validate_reward(result, ep_reward, newfigure=False)
         plt.subplot(212)
         plot_compare(result, ep_reward, newfigure=False)
-
     if exp_no is 3:
         result, ep_reward = parse_log("doc/log/4_log.txt")
         result_2, ep_reward_2 = parse_log("doc/log/5_log.txt")
@@ -181,7 +180,19 @@ def analyse_log():
         plt.title("alpha=0")
         plt.subplot(224)
         plot_compare(result_6, ep_reward_6, newfigure=False)
-
+    if exp_no is 4:
+        result100, ep_reward_100 = parse_log("doc/log/2_log_100.txt")
+        plt.subplot(221)
+        validate_reward(result100, ep_reward_100, newfigure=False)
+        plt.title("100coflows")
+        plt.subplot(223)
+        plot_compare(result100, ep_reward_100, is_benchmark=False, newfigure=False)
+        result, ep_reward = parse_log("doc/log/7_log.txt")
+        plt.subplot(222)
+        validate_reward(result, ep_reward, newfigure=False)
+        plt.subplot(224)
+        plot_compare(result, ep_reward, newfigure=False)
+        
 
     ## 
     if exp_no < 0:
