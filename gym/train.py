@@ -21,7 +21,7 @@ def loop(env):
 
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
-    oun = OUNoise(a_dim, mu=0.4)
+    oun = OUNoise(a_dim, mu=0)
 
     epsilon = 1
     EXPLORE = 70

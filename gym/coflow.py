@@ -50,22 +50,25 @@ class CoflowSimEnv(Env):
         a_coflows = eval(result["observation"].split(":")[-1])
         c_coflows = eval(completed.split(":")[-1])
         # reward = self.__calculate_reward(a_coflows, c_coflows)
-        reward = self.__cal_reward_2(a_coflows, c_coflows)
+        # reward = self.__cal_reward_2(a_coflows, c_coflows)
         # reward = self.__cal_reward_3(a_coflows, c_coflows)
+        reward = self.__cal_reward_4(a_coflows, c_coflows)
 
-        print("completed: ", [coflow[0] for coflow in c_coflows])
+        # print("completed: ", [coflow[0] for coflow in c_coflows])
         
         return obs, reward, done, {}
     
     def __cal_reward_4(self, a_coflows, c_coflows):
-        old_ave = sum(self.ep_f_coflows)/len(self.ep_f_coflows)
+        n = len(self.ep_f_coflows)
+        old_ave = sum(self.ep_f_coflows)/n if n != 0 else 0
         for coflow in c_coflows:
             self.ep_f_coflows.append(coflow[-1]/1024)
         total_t = 0
         for coflow in a_coflows:
             total_t += (coflow[-1]/1024)
         total_t += sum(self.ep_f_coflows)
-        ave_cct = total_t / (len(self.ep_f_coflows)+len(a_coflows))
+        n = (len(self.ep_f_coflows)+len(a_coflows))
+        ave_cct = total_t / n if n != 0 else 0
         diff = ave_cct - old_ave
         return -diff
 

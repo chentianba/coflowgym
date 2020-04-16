@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import codecs
 import sys
+from benchdata import exp4_benchmark_data
 
 
 def benchmark_analyse(benchmark_file):
@@ -187,7 +188,8 @@ def analyse_log():
         plt.title("100coflows")
         plt.subplot(223)
         plot_compare(result100, ep_reward_100, is_benchmark=False, newfigure=False)
-        result, ep_reward = parse_log("doc/log/7_log.txt")
+        # result, ep_reward = parse_log("doc/log/7_log.txt")
+        result, ep_reward = exp4_benchmark_data()
         plt.subplot(222)
         validate_reward(result, ep_reward, newfigure=False)
         plt.subplot(224)
