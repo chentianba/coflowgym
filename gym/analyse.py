@@ -137,7 +137,7 @@ def validate_reward(result, ep_reward, newfigure=True):
     plt.ylabel("ep_total_reward")
 
 def analyse_log():
-    exp_no = 4
+    exp_no = -4
 
     if exp_no == 1:
         res1, ep_r1 = parse_log("doc/log/1_log.txt")

@@ -24,8 +24,12 @@ class CoflowSimEnv(Env):
         self.action_space = spaces.Box(0, 1, (self.ACTION_DIM,))
 
         self.MB = 1024*1024 # 1MB = ? B
+        self.__initialize()
+
+    def __initialize(self):
         self.old_throughout = 0
         self.old_ave_duration = 0
+        self.ep_f_coflows = []
 
     def step(self, action):
         # correction for action
@@ -53,6 +57,18 @@ class CoflowSimEnv(Env):
         
         return obs, reward, done, {}
     
+    def __cal_reward_4(self, a_coflows, c_coflows):
+        old_ave = sum(self.ep_f_coflows)/len(self.ep_f_coflows)
+        for coflow in c_coflows:
+            self.ep_f_coflows.append(coflow[-1]/1024)
+        total_t = 0
+        for coflow in a_coflows:
+            total_t += (coflow[-1]/1024)
+        total_t += sum(self.ep_f_coflows)
+        ave_cct = total_t / (len(self.ep_f_coflows)+len(a_coflows))
+        diff = ave_cct - old_ave
+        return -diff
+
     def __cal_reward_3(self, a_coflows, c_coflows):
         total_time = 0
         for coflow in a_coflows:
@@ -94,8 +110,7 @@ class CoflowSimEnv(Env):
             r_a = -np.clip(math.log(diff + 1), 0, 10)
         else:
             r_a = np.clip(math.log(-diff + 1), 0, 100)
-        return r_a
-        
+        return r_a    
 
     def __calculate_reward(self, a_coflows, c_coflows):
         # print("active: ", a_coflows, "completed: ", c_coflows)
@@ -167,6 +182,8 @@ class CoflowSimEnv(Env):
         return self.coflowsim.printStats()
     
     def reset(self):
+        self.__initialize()
+
         obs = self.coflowsim.reset()
         return self.__parseObservation(str(obs))
     
