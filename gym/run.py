@@ -4,24 +4,14 @@ import numpy as np
 
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
-from util import get_h_m_s, get_now_time
 
-if not os.path.exists("./models"):
-    os.mkdir("./models")
-MODEL_DIR = "./models/"+get_now_time()
-
-def loop(env):
-    """Coflow Environment
-    """
-    # thresholds = [1.0485760E7*(10**i) for i in range(9)]
-    thresholds = np.array([10]*9)
+def run(env):
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
     a_bound = env.action_space.high
 
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
-    oun = OUNoise(a_dim, mu=0)
 
     ################ hyper parameter ##############
     agent.LR_A = 0.001
@@ -30,57 +20,26 @@ def loop(env):
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 200
+    EXPLORE = 400
     TH = 10 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
-    IS_OU = False
-    var = 3
-    ###############################################3
+    ###############################################
+    agent.load("models/2020-4-16-21-0-4/model_40.ckpt")
 
-    ave_rs = []
-
-    begin_time = time.time()
-
-    for episode in range(1, 1000):
+    for episode in range(5):
         obs = env.reset()
         ep_reward = 0
-        oun.reset()
-        epsilon -= (epsilon/EXPLORE)
 
-        ep_time = time.time()
         for i in range(int(1e10)):
-            ## Add exploration noise
-            action_original = agent.choose_action(obs)
-            # action_original = np.array(thresholds)
-            # action_original = (np.random.rand(a_dim))*2-1
-            if IS_OU:
-                action = action_original + max(0.01, epsilon)*oun.noise()
-            else:
-                action = np.clip(np.random.normal(action_original, var), -1, 1)
-
-            ## because of `tanh` activation which valued in [-1, 1], we need to scale
+            action = agent.choose_action(obs)
             obs_n, reward, done, _ = env.step( (action+1)*TH/2 )
-            print("episode %s step %s"%(episode, i))
-            print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done, "action:", action, "env_action:", (action+1)*TH/2)
-            agent.store_transition(obs, action, reward, obs_n)
-
-            if agent.pointer > agent.BATCH_SIZE:
-                agent.learn()
-                var *= 0.9995
-            
             obs = obs_n
             ep_reward += reward
             if done:
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 result = env.getResult()
                 print("result: ", result, type(result))
-                print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
-                sys.stdout.flush()
                 break
-        if PERIOD_SAVE_MODEL and episode%10 == 0:
-            model_name = "%s/model_%s.ckpt"%(MODEL_DIR, episode)
-            agent.save(model_name)
-
     env.close()
     print("Game is over!")
 
@@ -100,12 +59,8 @@ def config_env():
 
 def destroy_env():
     shutdownJVM()
-
+    
 if __name__ == "__main__":
-    if not os.path.exists("./log/"):
-        os.mkdir("./log/")
-    file = open("log/log.txt", "w")
-    sys.stdout = file
 
     env = config_env()
 
@@ -114,6 +69,6 @@ if __name__ == "__main__":
     sys.stdout.flush()
 
     # main loop
-    loop(env)
+    run(env)
 
     destroy_env()

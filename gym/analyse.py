@@ -137,8 +137,33 @@ def validate_reward(result, ep_reward, newfigure=True):
     plt.xlabel("ep_runtime")
     plt.ylabel("ep_total_reward")
 
-def analyse_log():
-    exp_no = -4
+def analyse_reward(file):
+    with open(file, "r") as f:
+        rs = []
+
+        line = f.readline()
+        while line:
+            start = line.find("reward:")
+            if start != -1:
+                words = line[start:].split()
+                r = eval(words[1])
+                rs.append(r)
+            line = f.readline()
+        plt.figure()
+        p = rs[:500]
+        plt.scatter(range(len(p)), p)
+
+def analyse_mlfq():
+    with open("log/mlfq.txt", "r") as f:
+        mlfqs = []
+        line = f.readline()
+        while line:
+            if line.startswith("MLFQ"):
+                mq = eval(line.split(":")[-1])
+                mlfqs.append(mq)
+            line = f.readline()
+
+def analyse_log(exp_no):
 
     if exp_no == 1:
         res1, ep_r1 = parse_log("doc/log/1_log.txt")
@@ -194,7 +219,27 @@ def analyse_log():
         validate_reward(result, ep_reward, newfigure=False)
         plt.subplot(224)
         plot_compare(result, ep_reward, newfigure=False)
-        
+    if exp_no is 5:
+        res100, ep_r_100 = parse_log("doc/log/3_log_100.txt")
+        plt.subplot(221)
+        validate_reward(res100, ep_r_100, newfigure=False)
+        plt.title("100coflows")
+        plt.subplot(223)
+        plot_compare(res100, ep_r_100, is_benchmark=False, newfigure=False)
+        res, ep_r = parse_log("doc/log/8_log.txt")
+        plt.subplot(222)
+        validate_reward(res, ep_r, newfigure=False)
+        plt.subplot(224)
+        plot_compare(res, ep_r, newfigure=False)
+    if exp_no is 6:
+        res100, ep_r_100 = parse_log("doc/log/4_log_100.txt")
+        plt.subplot(211)
+        plot_compare(res100, ep_r_100, is_benchmark=False, newfigure=False)
+        plt.title("100coflows")
+        plt.subplot(212)
+        plt.plot(ep_r_100)
+        plt.xlabel("episode")
+        plt.ylabel("ep_reward")
 
     ## 
     if exp_no < 0:
@@ -205,15 +250,16 @@ def analyse_log():
         result, ep_reward = np.array(result), np.array(ep_reward)
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
-        validate_reward(result, ep_reward)
         plot_compare(result, ep_reward, is_benchmark=False)
+        validate_reward(result, ep_reward)
         plt.figure()
         plt.plot(ep_reward)
         plt.ylabel("ep_reward")
 
 if __name__ == "__main__":
     # analyse_log
-    analyse_log()
+    analyse_log(6)
+    # analyse_mlfq()
 
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 

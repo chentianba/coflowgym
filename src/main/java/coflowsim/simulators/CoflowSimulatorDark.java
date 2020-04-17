@@ -198,6 +198,11 @@ public class CoflowSimulatorDark extends CoflowSimulator {
       }
     }
     Utils.log("sortedJobs(After): "+Arrays.toString(sortedJobs));
+    int[] countMLFQ = new int[NUM_JOB_QUEUES];
+    for (int k = 0; k < NUM_JOB_QUEUES; ++k) {
+        countMLFQ[k] = sortedJobs[k].size();
+    }
+    Utils.log("MLFQ: "+Arrays.toString(countMLFQ));
   }
 
   /** {@inheritDoc} */
