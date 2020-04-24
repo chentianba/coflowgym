@@ -33,7 +33,7 @@ class CoflowSimEnv(Env):
 
     def step(self, action):
         # correction for action
-        action = np.clip(action, 0.01, 100)
+        # action = np.clip(action, 1e-10, 100)
 
         res = self.coflowsim.toOneStep(action)
         # print("res", res)

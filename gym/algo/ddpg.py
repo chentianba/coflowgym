@@ -93,17 +93,24 @@ class DDPG(object):
 
     def _build_a(self, s, scope, trainable):
         with tf.variable_scope(scope):
-            net = tf.layers.dense(s, 30, activation=tf.nn.relu, name='l1', trainable=trainable)
+            n_l1 = 600
+            n_l2 = 600
+            net1 = tf.layers.dense(s, n_l1, activation=tf.nn.relu, name='l1', trainable=trainable)
+            net = tf.layers.dense(net1, n_l2, activation=tf.nn.relu, name='l2', trainable=trainable)
             a = tf.layers.dense(net, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
             return tf.multiply(a, self.a_bound, name='scaled_a')
 
     def _build_c(self, s, a, scope, trainable):
         with tf.variable_scope(scope):
-            n_l1 = 30
+            n_l1 = 600
+            n_l2 = 600
             w1_s = tf.get_variable('w1_s', [self.s_dim, n_l1], trainable=trainable)
             w1_a = tf.get_variable('w1_a', [self.a_dim, n_l1], trainable=trainable)
             b1 = tf.get_variable('b1', [1, n_l1], trainable=trainable)
-            net = tf.nn.relu(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1)
+            net1 = tf.nn.relu(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1)
+            w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
+            b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
+            net = tf.nn.relu(tf.matmul(net1, w2) + b2)
             return tf.layers.dense(net, 1, trainable=trainable)  # Q(s,a)
     
     def save(self, filename="./model.ckpt"):
@@ -270,7 +277,7 @@ def validate():
 
 if __name__ == "__main__":
     TRAINABLE = True
-    TRAINABLE = False
+    # TRAINABLE = False
     if TRAINABLE:
         train()
     else:

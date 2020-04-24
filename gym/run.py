@@ -4,6 +4,7 @@ import numpy as np
 
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
+from train import makeMLFQVAl
 
 def run(env):
     a_dim = env.action_space.shape[0]
@@ -24,7 +25,7 @@ def run(env):
     TH = 10 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
     ###############################################
-    agent.load("models/2020-4-16-21-0-4/model_40.ckpt")
+    agent.load("models/2020-4-24-11-3-27/model_550.ckpt")
 
     for episode in range(5):
         obs = env.reset()
@@ -32,7 +33,7 @@ def run(env):
 
         for i in range(int(1e10)):
             action = agent.choose_action(obs)
-            obs_n, reward, done, _ = env.step( (action+1)*TH/2 )
+            obs_n, reward, done, _ = env.step( makeMLFQVAl(env, action) )
             obs = obs_n
             ep_reward += reward
             if done:

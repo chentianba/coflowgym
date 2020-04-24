@@ -202,7 +202,8 @@ public class CoflowSimulatorDark extends CoflowSimulator {
     for (int k = 0; k < NUM_JOB_QUEUES; ++k) {
         countMLFQ[k] = sortedJobs[k].size();
     }
-    Utils.log("MLFQ: "+Arrays.toString(countMLFQ));
+    // Utils.log("MLFQ: "+Arrays.toString(countMLFQ));
+    System.out.println("MLFQ: "+Arrays.toString(countMLFQ));
   }
 
   /** {@inheritDoc} */
@@ -246,11 +247,15 @@ public class CoflowSimulatorDark extends CoflowSimulator {
   public boolean setThreshold(double[] thresholds) {
       this.queueThresholds.clear();
     //   System.out.println("type:"+thresholds.getClass().getName()+" len:"+thresholds.length);
+    // thresholds = new double[] {0.5, 2, 7, 13/7, 27/13, 56/27, 300/56, 2916/300, 1027089/2916};
       assert thresholds.length == (this.NUM_JOB_QUEUES-1);
-      double k = INIT_QUEUE_LIMIT/10;
+    //   double k = 1048576.0;
+    //   for (int i = 0; i < NUM_JOB_QUEUES-1; ++i) {
+    //       k = k*thresholds[i];
+    //       queueThresholds.add(k);
+    //   }
       for (int i = 0; i < NUM_JOB_QUEUES-1; ++i) {
-          k = k*thresholds[i];
-          queueThresholds.add(k);
+          queueThresholds.add(thresholds[i]);
       }
       queueThresholds.add(Double.MAX_VALUE);
     //   System.out.println(queueThresholds.toString());

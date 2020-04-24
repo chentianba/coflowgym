@@ -4,6 +4,33 @@ import codecs
 import sys
 from benchdata import exp4_benchmark_data
 
+def toCDF(data_l):
+    """ 
+    data is discrete.
+    example:
+    [1,1,2,3] -> [[1, 0.5], [2, 0.5], [2, 0.75], [3, 0.75], [3, 1.0]]
+    """
+    l_dict = {}
+    for e in sorted(data_l):
+        if e in l_dict:
+            l_dict[e] += 1
+        else:
+            l_dict[e] = 1 
+    l_sum = 0 
+    percentile = []
+    gap = 10
+    per_pos = gap/100
+    res = [[0, 0]] 
+    for e in sorted(l_dict):
+        l_sum += l_dict[e]/len(data_l)
+        res.append([e, res[-1][1]])
+        res.append([e, l_sum])
+        while (l_sum > per_pos):
+            percentile.append(e)
+            per_pos += (gap/100)
+    del res[:2]
+    print("Percentile(MB):",percentile)
+    return res 
 
 def benchmark_analyse(benchmark_file):
     with open(benchmark_file, "r") as f:
@@ -57,6 +84,14 @@ def benchmark_analyse(benchmark_file):
         plt.xlabel("No")
         plt.ylabel("width")
 
+        plt.figure()
+        test_sf = shuffle_t[:100]
+        test_cdf = np.array(toCDF(test_sf))
+        toCDF(shuffle_t)
+        plt.plot(test_cdf[:,0], test_cdf[:,1])
+        plt.xlabel("shuffle size/MB")
+        plt.ylabel("probability")
+
 def dark_analyse():
     with open("doc/dark.txt", "r") as f:
         durations = []
@@ -80,6 +115,8 @@ def dark_analyse():
         ##
         plt.figure()
         plt.plot(shuffle_t)
+        plt.xlabel("JOB")
+        plt.ylabel("Shuffle/B")
 
 def parse_log(file):
     """
@@ -257,8 +294,9 @@ def analyse_log(exp_no):
         plt.ylabel("ep_reward")
 
 if __name__ == "__main__":
-    # analyse_log
-    analyse_log(6)
+    
+    analyse_log(-6)
+    
     # analyse_mlfq()
 
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
