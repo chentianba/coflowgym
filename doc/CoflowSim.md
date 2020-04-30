@@ -235,3 +235,4 @@ ReLU不需要输入归一化来防止达到饱和，卷积神经网络大多使�
 
 重要资料：
 1. [深度强化学习落地方法论](https://zhuanlan.zhihu.com/c_1186982555915599872)
+2. [DDPG论文阅读](https://zhuanlan.zhihu.com/p/26754280)

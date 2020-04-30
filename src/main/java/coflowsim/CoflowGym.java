@@ -34,7 +34,7 @@ public class CoflowGym {
     public String toOneStep(double[] thresholds) {
         // System.out.println("thresholds: "+Arrays.toString(thresholds));
         String res = "";
-        int TIMESATMP = 10 * Constants.SIMULATION_SECOND_MILLIS;
+        int TIMESATMP = 10 * Constants.SIMULATION_SECOND_MILLIS; // default is 10
         boolean done;
         String obs, completed;
         this.takeAction(thresholds);
@@ -43,6 +43,7 @@ public class CoflowGym {
         obs = this.simulator.getObservation(TIMESATMP);
         res += ("{\"observation\":\""+obs+"\",");
         res += ("\"completed\":\""+completed+"\",");
+        res += ("\"MLFQ\":\""+this.simulator.getMLFQInfo()+"\",");
         res += ("\"done\":"+done+"}");
 
         return res;

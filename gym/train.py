@@ -10,12 +10,12 @@ if not os.path.exists("./models"):
     os.mkdir("./models")
 MODEL_DIR = "./models/"+get_now_time()
 
-def makeMLFQVAl(env, thresholds):
+def makeMLFQVal(env, thresholds):
     NUM_MLFQ = env.ACTION_DIM
     assert NUM_MLFQ == len(thresholds), "length of thresholds doesnot Match!"
-    thresholds = np.clip(thresholds, -1, 1)
+    thresholds = np.clip(thresholds, -1, 10)
 
-    is_exponent = True
+    is_exponent = False
     if is_exponent:
         ## scale to normalization
         for i in range(NUM_MLFQ):
@@ -35,7 +35,17 @@ def makeMLFQVAl(env, thresholds):
             thresholds[i] = thresholds[i]*baseline[i]
         return np.array(thresholds)
     else:
-        pass
+        initial = 1 # 1K
+        for i in range(NUM_MLFQ):
+            if thresholds[i] < 0:
+                thresholds[i] = thresholds[i]*9+10
+            else:
+                thresholds[i] = thresholds[i]*90+10
+        thresholds = np.clip(thresholds, 1.0001, 100)
+        for i in range(NUM_MLFQ):
+            initial = initial*thresholds[i]
+            thresholds[i] = initial
+        return np.array(thresholds)
 
 def loop(env):
     """Coflow Environment
@@ -51,8 +61,8 @@ def loop(env):
     oun = OUNoise(a_dim, mu=0)
 
     ################ hyper parameter ##############
-    agent.LR_A = 0.001
-    agent.LR_C = 0.0001
+    agent.LR_A = 1e-4
+    agent.LR_C = 1e-3
     agent.GAMMA = 0.99
     agent.TAU = 0.001
 
@@ -60,7 +70,7 @@ def loop(env):
     EXPLORE = 200
     TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
-    IS_OU = False
+    IS_OU = True
     var = 3
     ###############################################3
 
@@ -86,9 +96,10 @@ def loop(env):
                 action = np.clip(np.random.normal(action_original, var), -1, 1)
 
             ## because of `tanh` activation which valued in [-1, 1], we need to scale
-            obs_n, reward, done, _ = env.step( makeMLFQVAl(env, action) )
+            obs_n, reward, done, _ = env.step( makeMLFQVal(env, action) )
             print("episode %s step %s"%(episode, i))
-            print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done, "action:", action, "env_action:", makeMLFQVAl(env, action))
+            print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
+            print("action:", action.tolist(), "env_action:", makeMLFQVal(env, action).tolist())
             agent.store_transition(obs, action, reward, obs_n)
 
             if agent.pointer > agent.BATCH_SIZE:

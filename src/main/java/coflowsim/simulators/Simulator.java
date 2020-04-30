@@ -491,36 +491,6 @@ public abstract class Simulator {
   }
 
   public String getMLFQInfo() {
-    double sumDur = 0.0;
-    String resStats = "";
-
-    for (Job j : activeJobs.values()) {
-        ;
-    }
-
-    for (Job j : jobs) {
-        if (ignoreThisJob(j)) {
-            continue;
-        }
-
-        double jDur = j.getSimulatedDuration();
-        sumDur += jDur;
-
-        boolean metDeadline = false;
-        if (jDur - j.deadlineDuration < 100
-            || ((jDur / 8.0) / (j.deadlineDuration * 128.0 / 1000.0)) - 1.0 < 0.03) {
-            metDeadline = true;
-        }
-
-        String res = (j.jobName + " " + j.simulatedStartTime + " " + j.simulatedFinishTime
-            + " " + j.numMappers + " " + j.numReducers + " " + j.totalShuffleBytes + " "
-            + j.maxShuffleBytes + " " + jDur + " " + Math.round(j.deadlineDuration) + " "
-            + j.simulatedShuffleIndividualSums);
-        resStats += (res + "\n");
-    }
-
-    resStats += sumDur;
-    // System.out.println(sumDur);
-    return "Info";
+      return "";
   }
 }

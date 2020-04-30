@@ -59,10 +59,14 @@ class DDPG(object):
         # in the feed_dic for the td_error, the self.a should change to actions in memory
         td_error = tf.losses.mean_squared_error(labels=q_target, predictions=q)
         self.ctrain = tf.train.AdamOptimizer(self.LR_C).minimize(td_error, var_list=self.ce_params)
+        tf.summary.scalar("td_error", td_error)
 
         a_loss = - tf.reduce_mean(q)    # maximize the q
         self.atrain = tf.train.AdamOptimizer(self.LR_A).minimize(a_loss, var_list=self.ae_params)
+        tf.summary.scalar("a_loss", a_loss)
 
+        self.merged = tf.summary.merge_all()
+        self.writer = tf.summary.FileWriter("tf_log/", self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
 
     def choose_action(self, s):
@@ -84,6 +88,8 @@ class DDPG(object):
 
             self.sess.run(self.atrain, {self.S: bs})
             self.sess.run(self.ctrain, {self.S: bs, self.a: ba, self.R: br, self.S_: bs_})
+            summary = self.sess.run(self.merged, {self.S: bs, self.a: ba, self.R: br, self.S_: bs_})
+            self.writer.add_summary(summary, self.pointer)
 
     def store_transition(self, s, a, r, s_):
         transition = np.hstack((s, a, [r], s_))
@@ -95,9 +101,23 @@ class DDPG(object):
         with tf.variable_scope(scope):
             n_l1 = 600
             n_l2 = 600
-            net1 = tf.layers.dense(s, n_l1, activation=tf.nn.relu, name='l1', trainable=trainable)
-            net = tf.layers.dense(net1, n_l2, activation=tf.nn.relu, name='l2', trainable=trainable)
+            # net1 = tf.layers.dense(s, n_l1, activation=tf.nn.relu, name='l1', trainable=trainable)
+            w1 = tf.get_variable("w1", [self.s_dim, n_l1], trainable=trainable)
+            b1 = tf.get_variable("b1", [1, n_l1], trainable=trainable)
+            net1 = tf.nn.relu(tf.matmul(s, w1) + b1)
+            ## BN
+            net1 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(s, w1) + b1, training=True, name="BN_1"))
+            w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
+            b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
+            net = tf.nn.relu(tf.matmul(net1, w2) + b2)
+            ## BN
+            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
             a = tf.layers.dense(net, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
+
+            tf.summary.histogram(scope+"/w1", w1)
+            tf.summary.histogram(scope+"/b1", b1)
+            tf.summary.histogram(scope+"/w2", w2)
+            tf.summary.histogram(scope+"/b2", b2)
             return tf.multiply(a, self.a_bound, name='scaled_a')
 
     def _build_c(self, s, a, scope, trainable):
@@ -107,10 +127,21 @@ class DDPG(object):
             w1_s = tf.get_variable('w1_s', [self.s_dim, n_l1], trainable=trainable)
             w1_a = tf.get_variable('w1_a', [self.a_dim, n_l1], trainable=trainable)
             b1 = tf.get_variable('b1', [1, n_l1], trainable=trainable)
-            net1 = tf.nn.relu(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1)
+            data = tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1
+            ## BN
+            data = tf.layers.batch_normalization(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1, training=True, name="BN_1")
+            net1 = tf.nn.relu(data)
             w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
             b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
             net = tf.nn.relu(tf.matmul(net1, w2) + b2)
+            ## BN
+            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
+
+            tf.summary.histogram(scope+"/w1_s", w1_s)
+            tf.summary.histogram(scope+"/w1_a", w1_a)
+            tf.summary.histogram(scope+"/b1", b1)
+            tf.summary.histogram(scope+"/w2", w2)
+            tf.summary.histogram(scope+"/b2", b2)
             return tf.layers.dense(net, 1, trainable=trainable)  # Q(s,a)
     
     def save(self, filename="./model.ckpt"):
@@ -144,17 +175,18 @@ class OUNoise:
 
 ###############################  training  ####################################
 ###############################  A Demo  ####################################
-
 MAX_EPISODES = 2000
-MAX_EP_STEPS = 300
+MAX_EP_STEPS = 200 # default is 200
 RENDER = False
 ENV_NAME = 'Pendulum-v0'
+A_BOUND = 2
 
-RENDER = False
+# RENDER = True
 MAX_EP_STEPS = 1000
 ENV_NAME = "MountainCarContinuous-v0"
-gamma = 0.9
+A_BOUND = 1
 
+EXPLORE = 70
 pre_trained = False
 
 def train():
@@ -164,12 +196,12 @@ def train():
 
     s_dim = env.observation_space.shape[0]
     a_dim = env.action_space.shape[0]
-    a_bound = np.array([np.float64(10)])
+    a_bound = np.array([np.float64(A_BOUND)])
     print(a_bound, env.action_space.high, env.action_space.low)
 
     oun = OUNoise(a_dim, mu=0.4)
 
-    ddpg = DDPG(a_dim, s_dim, a_bound, GAMMA=gamma)
+    ddpg = DDPG(a_dim, s_dim, a_bound)
 
     if pre_trained:
         ddpg.load('./log/model.ckpt')
@@ -182,25 +214,26 @@ def train():
     def test():
         TEST_EPISODE = 10
         ep_steps = 0
+        test_reward = 0
         for _ in range(TEST_EPISODE):
             s = env.reset()
             for t in range(MAX_EP_STEPS):
                 # env.render()
                 a = ddpg.choose_action(s)
-                s_, r, done, _ = env.step(a)
-                s = s_
+                s, r, done, _ = env.step(a)
+                test_reward += r
                 if t == MAX_EP_STEPS-1 or done:
                     # print("in test: consume %s steps!"%(t))
                     ep_steps += t
                     break
-        return ep_steps//TEST_EPISODE
+        return ep_steps//TEST_EPISODE, test_reward//TEST_EPISODE
 
     epsilon = 1
-    for episode in range(MAX_EPISODES):
+    for episode in range(1, 1+MAX_EPISODES):
         s = env.reset()
         ep_reward = 0
         oun.reset()
-        epsilon -= (epsilon/70)
+        epsilon -= (epsilon/EXPLORE)
 
         for j in range(MAX_EP_STEPS):
             if RENDER:
@@ -209,15 +242,18 @@ def train():
             # Add exploration noise
             action_original = ddpg.choose_action(s)
             # a = 2*a-1 ## for sigmoid
-            # a = np.clip(np.random.normal(a, var), env.action_space.low*a_bound[0], env.action_space.high*a_bound[0])    # add randomness to action selection for exploration
+            # a = np.clip(np.random.normal(action_original, var), -1*a_bound[0], a_bound[0])    # add randomness to action selection for exploration
             a = action_original+max(0.01, epsilon)*oun.noise()
             s_, r, done, _ = env.step(a)
-            # print(s, r, a)
+            print("step:", j, s, r, a)
+            # if r < -5:
+            #     r = r*10
 
             ddpg.store_transition(s, a, r, s_)
 
             if ddpg.pointer > ddpg.BATCH_SIZE:
-                var *= .9995    # decay the action randomness
+                if ddpg.pointer % 1 == 0:
+                    var *= .9995    # decay the action randomness
                 ddpg.learn()
                 if ddpg.pointer == (ddpg.BATCH_SIZE+1):
                     print("Begin learning...")
@@ -228,17 +264,21 @@ def train():
                 # print('Episode:', episode, ' Reward: %i' % int(ep_reward), 'Explore: %.2f' % var, )
                 # if ep_reward > -300:RENDER = True
                 his_step.append(j)
-                print("episode", episode, "consume", j, "steps, epsilon =", epsilon)
+                print("episode", episode, "consume", j, "steps, epsilon =", epsilon,"var = ", var, "ep_reward:", ep_reward)
                 break
         if episode % 20 == 0:
-            t = test()
-            print("in test: average consume %s steps!"%(t))
-            if t < 180:
+            t_steps, t_rewards = test()
+            print("in test: average consume %s steps and ep_rewards is %s!"%(t_steps, t_rewards))
+            if ENV_NAME == "MountainCarContinuous-v0" and t_steps < 180:
+                ddpg.save("./log/model.ckpt")
+                break
+            if ENV_NAME == 'Pendulum-v0' and t_rewards > -150:
                 ddpg.save("./log/model.ckpt")
                 break
         # if (len(his_step) >= 5 and sum(his_step[-10:])/10 < 180):
         #     ddpg.save("./log/model.ckpt")
         #     return
+        # sys.stdout.flush()
     print('Running time: ', time.time() - t1)
 
 
@@ -249,33 +289,34 @@ def validate():
 
     s_dim = env.observation_space.shape[0]
     a_dim = env.action_space.shape[0]
-    a_bound = np.array([np.float64(10)])
+    a_bound = np.array([np.float64(A_BOUND)])
     print(a_bound, env.action_space.high, env.action_space.low)
 
     oun = OUNoise(a_dim, mu=0.4)
 
-    ddpg = DDPG(a_dim, s_dim, a_bound, GAMMA=gamma)
+    ddpg = DDPG(a_dim, s_dim, a_bound)
 
     ddpg.load('./log/model.ckpt')
 
     var = 3  # control exploration
     t1 = time.time()
-    total_reward = 0
+    
     for i in range(10):
         state = env.reset()
+        ep_r = 0
         for j in range(MAX_EP_STEPS):
             env.render()
             action = ddpg.choose_action(state) # direct action for test
-            state,reward,done,_ = env.step(action)
-            total_reward += reward
+            state, reward, done, _ = env.step(action)
+            ep_r += reward
             if j==MAX_EP_STEPS-1 or done:
-                print("in validate: consume %s steps!"%j)
+                print("in validate: consume %s steps and ep_reward is %s!"%(j, ep_r))
                 break
-    ave_reward = total_reward/300
-    print ('Evaluation Average Reward:',ave_reward)
     print('Running time: ', time.time() - t1)
 
 if __name__ == "__main__":
+    # sys.stdout = open("log/%s-log.txt"%(ENV_NAME), "w")
+
     TRAINABLE = True
     # TRAINABLE = False
     if TRAINABLE:

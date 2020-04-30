@@ -1,10 +1,33 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import codecs
-import sys
+import sys, math
 from benchdata import exp4_benchmark_data
 
-def toCDF(data_l):
+def stats_action(file):
+    with open(file, 'r') as f:
+        actions = []
+
+        line = f.readline()
+        while line:
+            pos = line.find("env_action")
+            if pos != -1:
+                action = eval(line[:pos].split(":")[-1])
+                actions.append(action)
+
+            line = f.readline()
+        # print(actions[:10])
+    actions = np.array(actions)
+    N = len(actions[0])
+    plt.figure()
+    n = math.ceil(math.sqrt(N))
+    for i in range(N):
+        plt.subplot("%s%s%s"%(n, n, i+1))
+        cdf = toCDF(actions[:, i], False)
+        plt.plot(cdf[:, 0], cdf[:, 1])
+        plt.xlabel("action[%s]"%i)
+
+def toCDF(data_l, per_out=True):
     """ 
     data is discrete.
     example:
@@ -29,8 +52,9 @@ def toCDF(data_l):
             percentile.append(e)
             per_pos += (gap/100)
     del res[:2]
-    print("Percentile(MB):",percentile)
-    return res 
+    if per_out:
+        print("Percentile(MB):",percentile)
+    return np.array(res)
 
 def benchmark_analyse(benchmark_file):
     with open(benchmark_file, "r") as f:
@@ -152,7 +176,7 @@ def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
         comp = [2.4247392E7, 4.3473352E7, 1.5005968E7]
     else:
         comp = [326688.0, 612776.0, 281880.0]
-    plt.plot(x, result, 'bo-')
+    plt.plot(x, result, 'b.-')
     plt.plot(x, [comp[0]]*len(x), "red") # DARK
     plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
     plt.plot(x, [comp[2]]*len(x), "lawngreen") # SEBF
@@ -199,6 +223,18 @@ def analyse_mlfq():
                 mq = eval(line.split(":")[-1])
                 mlfqs.append(mq)
             line = f.readline()
+        coflow_mlfq = [sum(mlfq) for mlfq in mlfqs]
+        plt.figure()
+        plt.subplot(211)
+        plt.scatter(range(len(coflow_mlfq)), coflow_mlfq, marker='.')
+        plt.ylabel("number of coflow")
+        plt.xlabel("step")
+        cdf = toCDF(coflow_mlfq, False)
+        plt.subplot(212)
+        plt.plot(cdf[:, 0], cdf[:, 1])
+        plt.xlabel("number of coflow")
+        plt.ylabel("cdf")
+
 
 def analyse_log(exp_no):
 
@@ -287,17 +323,28 @@ def analyse_log(exp_no):
         result, ep_reward = np.array(result), np.array(ep_reward)
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
-        plot_compare(result, ep_reward, is_benchmark=False)
-        validate_reward(result, ep_reward)
+        plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
         plt.figure()
+        plt.subplot(221)
+        plt.subplot(222)
+        validate_reward(result, ep_reward, newfigure=False)
+        plt.subplot(223)
         plt.plot(ep_reward)
         plt.ylabel("ep_reward")
+        plt.xlabel("episode")
+        plt.subplot(224)
+        cdf = np.array(toCDF(result, False))
+        plt.plot(cdf[:, 0], cdf[:, 1])
+        plt.xlabel("runtime")
+        plt.ylabel("CDF")
 
 if __name__ == "__main__":
     
     analyse_log(-6)
+
+    # stats_action("log/log.txt")
     
-    # analyse_mlfq()
+    analyse_mlfq()
 
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 

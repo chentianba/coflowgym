@@ -41,6 +41,7 @@ class CoflowSimEnv(Env):
         obs = result["observation"]
         obs = self.__parseObservation(obs)
         done = result["done"]
+        mlfq = eval(result["MLFQ"])
         # obs = self.coflowsim.printStats()
         # obs = np.zeros(self.observation_space.shape)
 
@@ -53,11 +54,19 @@ class CoflowSimEnv(Env):
         # reward = self.__cal_reward_2(a_coflows, c_coflows)
         # reward = self.__cal_reward_3(a_coflows, c_coflows)
         reward = self.__cal_reward_4(a_coflows, c_coflows)
+        # reward = self.__cal_reward_5(a_coflows, c_coflows, mlfq)
 
         # print("completed: ", [coflow[0] for coflow in c_coflows])
         
         return obs, reward, done, {}
     
+    def __cal_reward_5(self, a_coflows, c_coflows, mlfq):
+        r1 = self.__cal_reward_4(a_coflows, c_coflows)
+        r2 = -np.std(mlfq)
+        alpha = 0.2
+        print("r1:", r1, "r2:", r2)
+        return alpha*r1 + (1-alpha)*r2
+
     def __cal_reward_4(self, a_coflows, c_coflows):
         n = len(self.ep_f_coflows)
         old_ave = sum(self.ep_f_coflows)/n if n != 0 else 0

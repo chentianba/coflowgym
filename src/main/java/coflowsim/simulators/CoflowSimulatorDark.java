@@ -262,4 +262,11 @@ public class CoflowSimulatorDark extends CoflowSimulator {
       return true;
   }
 
+  public String getMLFQInfo() {
+    int[] countMLFQ = new int[NUM_JOB_QUEUES];
+    for (int k = 0; k < NUM_JOB_QUEUES; ++k) {
+        countMLFQ[k] = sortedJobs[k].size();
+    }
+    return Arrays.toString(countMLFQ);
+  }
 }
