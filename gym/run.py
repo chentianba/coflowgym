@@ -1,10 +1,14 @@
 import sys, time, os
 from jpype import *
 import numpy as np
+import json
 
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
-from train import makeMLFQVAl
+from train import makeMLFQVal
+from util import chengji
+
+kb, mb, gb, tb = 1024**1, 1024**2, 1024**3, 1024**4
 
 def run(env):
     a_dim = env.action_space.shape[0]
@@ -33,7 +37,7 @@ def run(env):
 
         for i in range(int(1e10)):
             action = agent.choose_action(obs)
-            obs_n, reward, done, _ = env.step( makeMLFQVAl(env, action) )
+            obs_n, reward, done, _ = env.step( makeMLFQVal(env, action) )
             obs = obs_n
             ep_reward += reward
             if done:
@@ -43,6 +47,60 @@ def run(env):
                 break
     env.close()
     print("Game is over!")
+
+def run_coflowsim(env):
+
+    t_actions = np.array([
+        [10*mb, 100*mb, 1*gb, 10*gb, 100*gb, 1*tb],
+        # [1*mb, 5*mb, 13*mb, 33*mb, 165*mb, 4212*mb],
+    ])
+    # t_actions = sample(env.action_space.shape[0])
+    f = open("log/sample.json", "r")
+    t_actions = json.load(f)["actions"]
+    print(len(t_actions))
+    assert len(t_actions[0]) == env.action_space.shape[0], "ActionDim Error!"
+    for action in t_actions[:10000]:
+        env.reset()
+        for i in range(int(1e10)):
+            _ , _, done, _ = env.step(action)
+            if done:
+                print("Action:", action, "result:", env.getResult())
+                break
+        sys.stdout.flush()
+    env.close()
+    print("It's over!")
+
+def sample(a_dim):
+    init_limit = 1*kb
+    mult = list(range(2, 10))+list(range(10, 110, 10))
+    print(init_limit, mult, a_dim)
+    count = [-1]*a_dim
+    N = len(mult)
+    k = 0
+    actions = []
+    while k >= 0:
+        while count[k] < N-1:
+            count[k] += 1
+            if k == a_dim-1:
+                # print(count)
+                act = [mult[count[i]] for i in range(a_dim)]
+                if chengji(act) >= 1e8:
+                    actions.append(act)
+            else:
+                k += 1
+        count[k] = -1
+        k -= 1
+    print(actions[:10])
+    for i in range(len(actions)):
+        p = init_limit
+        for j in range(len(actions[i])):
+            actions[i][j] = actions[i][j]*p
+            p = actions[i][j]
+    print(actions[:10])
+    with open("log/sample.json", "w") as f:
+        json.dump({"actions":actions}, f)
+    return actions
+        
 
 def config_env():
     # Configure the jpype environment
@@ -66,10 +124,11 @@ if __name__ == "__main__":
     env = config_env()
 
     # record
-    print("training begins: %s"%(time.asctime(time.localtime(time.time()))))
-    sys.stdout.flush()
+    # print("training begins: %s"%(time.asctime(time.localtime(time.time()))))
 
     # main loop
-    run(env)
+    # run(env)
+    run_coflowsim(env)
+    # sample(6)
 
     destroy_env()

@@ -23,11 +23,11 @@ def stats_action(file):
     n = math.ceil(math.sqrt(N))
     for i in range(N):
         plt.subplot("%s%s%s"%(n, n, i+1))
-        cdf = toCDF(actions[:, i], False)
+        cdf = toCDF(actions[:, i])
         plt.plot(cdf[:, 0], cdf[:, 1])
         plt.xlabel("action[%s]"%i)
 
-def toCDF(data_l, per_out=True):
+def toCDF(data_l):
     """ 
     data is discrete.
     example:
@@ -40,21 +40,22 @@ def toCDF(data_l, per_out=True):
         else:
             l_dict[e] = 1 
     l_sum = 0 
-    percentile = []
-    gap = 10
-    per_pos = gap/100
     res = [[0, 0]] 
     for e in sorted(l_dict):
-        l_sum += l_dict[e]/len(data_l)
+        l_sum += l_dict[e]
         res.append([e, res[-1][1]])
-        res.append([e, l_sum])
-        while (l_sum > per_pos):
-            percentile.append(e)
-            per_pos += (gap/100)
+        res.append([e, l_sum/len(data_l)])
     del res[:2]
-    if per_out:
-        print("Percentile(MB):",percentile)
     return np.array(res)
+
+def toPercentile(cdf, num=10):
+    count = 1
+    percentile = []
+    for e in cdf:
+        while e[1] > count/num:
+            percentile.append(e[0])
+            count += 1
+    return percentile
 
 def benchmark_analyse(benchmark_file):
     with open(benchmark_file, "r") as f:
@@ -111,7 +112,8 @@ def benchmark_analyse(benchmark_file):
         plt.figure()
         test_sf = shuffle_t[:100]
         test_cdf = np.array(toCDF(test_sf))
-        toCDF(shuffle_t)
+        print("100coflows Percentile(MB):", toPercentile(test_cdf, num=7))
+        print("Benchmark Percentile(MB):", toPercentile(toCDF(shuffle_t), num=7))
         plt.plot(test_cdf[:,0], test_cdf[:,1])
         plt.xlabel("shuffle size/MB")
         plt.ylabel("probability")
@@ -224,16 +226,32 @@ def analyse_mlfq():
                 mlfqs.append(mq)
             line = f.readline()
         coflow_mlfq = [sum(mlfq) for mlfq in mlfqs]
-        plt.figure()
+        plt.figure("Number in MLFQ")
         plt.subplot(211)
         plt.scatter(range(len(coflow_mlfq)), coflow_mlfq, marker='.')
         plt.ylabel("number of coflow")
         plt.xlabel("step")
-        cdf = toCDF(coflow_mlfq, False)
+        cdf = toCDF(coflow_mlfq)
         plt.subplot(212)
         plt.plot(cdf[:, 0], cdf[:, 1])
         plt.xlabel("number of coflow")
         plt.ylabel("cdf")
+    if True:
+        with open("log/result.txt") as f:
+            mlfqs = []
+            line = f.readline()
+            while line:
+                if line.startswith("MLFQ"):
+                    mq = eval(line.split(":")[-1])
+                    mlfqs.append(mq)
+                line = f.readline()
+            count = 0
+            for mq in mlfqs:
+                if np.sum(np.array(mq) > 1) > 0:
+                    count += 1
+            print("Length of samples:", len(mlfqs))
+            print("count of Coflow in MLFQ is more than 1:", count/len(mlfqs))
+
 
 
 def analyse_log(exp_no):
@@ -324,19 +342,19 @@ def analyse_log(exp_no):
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
         plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
-        plt.figure()
-        plt.subplot(221)
-        plt.subplot(222)
-        validate_reward(result, ep_reward, newfigure=False)
-        plt.subplot(223)
-        plt.plot(ep_reward)
-        plt.ylabel("ep_reward")
-        plt.xlabel("episode")
-        plt.subplot(224)
-        cdf = np.array(toCDF(result, False))
-        plt.plot(cdf[:, 0], cdf[:, 1])
-        plt.xlabel("runtime")
-        plt.ylabel("CDF")
+        # plt.figure("Exp")
+        # plt.subplot(221)
+        # plt.subplot(222)
+        # validate_reward(result, ep_reward, newfigure=False)
+        # plt.subplot(223)
+        # plt.plot(ep_reward)
+        # plt.ylabel("ep_reward")
+        # plt.xlabel("episode")
+        # plt.subplot(224)
+        # cdf = toCDF(result)
+        # plt.plot(cdf[:, 0], cdf[:, 1])
+        # plt.xlabel("runtime")
+        # plt.ylabel("CDF")
 
 if __name__ == "__main__":
     

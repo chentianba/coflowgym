@@ -1,4 +1,4 @@
-import sys, time, os
+import sys, time, os, math
 from jpype import *
 import numpy as np
 
@@ -15,8 +15,12 @@ def makeMLFQVal(env, thresholds):
     assert NUM_MLFQ == len(thresholds), "length of thresholds doesnot Match!"
     thresholds = np.clip(thresholds, -1, 10)
 
-    is_exponent = False
-    if is_exponent:
+    mb = 1024**2
+    # kb, gb, tb = mb/1000, mb*1000, mb*1000000
+    kb, gb, tb = 1024, 1024**3, 1024**4
+
+    NO = 2
+    if NO is 0:
         ## scale to normalization
         for i in range(NUM_MLFQ):
             if thresholds[i] < 0:
@@ -25,23 +29,38 @@ def makeMLFQVal(env, thresholds):
                 thresholds[i] = thresholds[i]*4+1
 
         ## applied to MLFQ
-        mb = 1024**2
-        # kb, gb, tb = mb/1000, mb*1000, mb*1000000
-        kb, gb, tb = 1024, 1024**3, 1024**4
         # baseline = [300*kb, mb, 3*mb, 10*mb, 30*mb, 100*mb, 1*gb, 10*gb, 100*gb]
         # baseline = [10*mb, 100*mb, gb, 10*gb, 100*gb, tb, 10*tb, 100*tb, 1000*tb]
         baseline = [10*kb, 100*kb, 1*mb, 10*mb, 100*mb, gb, 10*gb, 100*gb, tb]
         for i in range(NUM_MLFQ):
             thresholds[i] = thresholds[i]*baseline[i]
         return np.array(thresholds)
-    else:
-        initial = 1 # 1K
+    if NO is 1: ## 7 queues
+        initial = 1 # 1B
         for i in range(NUM_MLFQ):
             if thresholds[i] < 0:
                 thresholds[i] = thresholds[i]*9+10
             else:
                 thresholds[i] = thresholds[i]*90+10
         thresholds = np.clip(thresholds, 1.0001, 100)
+        for i in range(NUM_MLFQ):
+            initial = initial*thresholds[i]
+            thresholds[i] = initial
+        return np.array(thresholds)
+    if NO is 2: ## 7 queues
+        initial = 1*kb # 1K
+        for i in range(NUM_MLFQ):
+            thresholds[i] = math.pow(10, thresholds[i]+1)
+        thresholds = np.clip(thresholds, 1.0001, 100)
+        for i in range(NUM_MLFQ):
+            initial = initial*thresholds[i]
+            thresholds[i] = initial
+        return np.array(thresholds)
+    if NO is 3: ## 4 queues
+        initial = 1*kb # 1K
+        for i in range(NUM_MLFQ):
+            thresholds[i] = math.pow(10, (thresholds[i]+1)*1.5)
+        thresholds = np.clip(thresholds, 1.0001, 1000)
         for i in range(NUM_MLFQ):
             initial = initial*thresholds[i]
             thresholds[i] = initial
@@ -67,7 +86,7 @@ def loop(env):
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 200
+    EXPLORE = 400
     TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
     IS_OU = True

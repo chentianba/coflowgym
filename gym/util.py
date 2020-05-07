@@ -1,5 +1,12 @@
 import numpy as np
 from datetime import datetime
+import os, sys
+
+def chengji(x):
+    res = 1
+    for e in x:
+        res = res*e
+    return res
 
 def get_h_m_s(second):
     """
@@ -44,6 +51,19 @@ def cal_limit(file):
             size[1] = max(size[1], t_size)
             # print(c_width, t_size)
         return width, size
+
+class Logger:
+    def __init__(self, file):
+        assert type(file) == str, "please given a right file of 'str'."
+        if os.path.exists(file):
+            os.remove(file)
+        self.filename = file
+    
+    def print(self, info):
+        assert type(info) == str, "Info into logger should be a string."
+        log = open(self.filename, 'a')
+        log.write(info+"\n")
+        log.close()
 
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB

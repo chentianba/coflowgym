@@ -6,7 +6,10 @@ from algo.ddpg import OUNoise
 import numpy as np
 import json
 import math, sys, time
+from util import Logger
 
+# logger = Logger("log/mlfq.txt")
+logger = Logger("log/result.txt")
 
 class CoflowSimEnv(Env):
     def __init__(self, gym):
@@ -14,7 +17,7 @@ class CoflowSimEnv(Env):
         self.NUM_COFLOW = self.coflowsim.MAX_COFLOW # 10
         self.UNIT_DIM = 4 # id, width/1000, sent_bytes, duration_time/1000
         self.STATE_DIM = self.NUM_COFLOW*self.UNIT_DIM
-        self.ACTION_DIM = 9
+        self.ACTION_DIM = 6
 
         self.low_property = np.zeros((self.UNIT_DIM,))
         assert self.UNIT_DIM == 4, "UNIT_DIM != 4"
@@ -42,6 +45,7 @@ class CoflowSimEnv(Env):
         obs = self.__parseObservation(obs)
         done = result["done"]
         mlfq = eval(result["MLFQ"])
+        logger.print("MLFQ: "+str(mlfq))
         # obs = self.coflowsim.printStats()
         # obs = np.zeros(self.observation_space.shape)
 
