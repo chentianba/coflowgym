@@ -19,7 +19,7 @@ import coflowsim.utils.Constants.SHARING_ALGO;
  */
 public class CoflowSimulatorDark extends CoflowSimulator {
 
-  public static int NUM_JOB_QUEUES = 10;
+  public static int NUM_JOB_QUEUES = 7;
   public static double INIT_QUEUE_LIMIT = 1048576.0 * 10;
   public static double JOB_SIZE_MULT = 10.0;
 

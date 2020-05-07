@@ -19,7 +19,7 @@ def makeMLFQVal(env, thresholds):
     # kb, gb, tb = mb/1000, mb*1000, mb*1000000
     kb, gb, tb = 1024, 1024**3, 1024**4
 
-    NO = 2
+    NO = 5
     if NO is 0:
         ## scale to normalization
         for i in range(NUM_MLFQ):
@@ -72,6 +72,15 @@ def makeMLFQVal(env, thresholds):
         for i in range(NUM_MLFQ):
             thresholds[i] = (thresholds[i]+1)*5
         thresholds = np.clip(thresholds, 0.01, 100)
+        for i in range(NUM_MLFQ):
+            initial = initial*thresholds[i]
+            thresholds[i] = initial
+        return np.array(thresholds)
+    if NO is 5: ## 7 queues
+        initial = 1*kb # 1K
+        for i in range(NUM_MLFQ):
+            thresholds[i] = math.pow(10, 1.5*(thresholds[i]+1))
+        thresholds = np.clip(thresholds, 1.0001, 1000)
         for i in range(NUM_MLFQ):
             initial = initial*thresholds[i]
             thresholds[i] = initial
