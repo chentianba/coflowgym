@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import codecs
 import sys, math
 from benchdata import exp4_benchmark_data
+from util import toFactor
 
 def stats_action(file):
     with open(file, 'r') as f:
@@ -252,7 +253,24 @@ def analyse_mlfq():
             print("Length of samples:", len(mlfqs))
             print("count of Coflow in MLFQ is more than 1:", count/len(mlfqs))
 
-
+def analyse_samples():
+    with open("log/sample_1.txt") as f:
+        actions = []
+        results = []
+        
+        line = f.readline()
+        while line:
+            if line.startswith("Action"):
+                pos = line.find("result")
+                res = eval(line[pos:].split(":")[-1])
+                if res < 326688:
+                    act = eval(line[:pos].split(":")[-1])
+                    actions.append(act)
+                    results.append(res)
+            line = f.readline()
+        # for act, res in zip(actions, results):
+        #     print(toFactor(act, 1024), res)
+        print("Minimum Result:", min(results))
 
 def analyse_log(exp_no):
 
@@ -367,5 +385,7 @@ if __name__ == "__main__":
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 
     # dark_analyse()
+
+    analyse_samples()
 
     plt.show()

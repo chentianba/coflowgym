@@ -2,6 +2,7 @@ import sys, time, os
 from jpype import *
 import numpy as np
 import json
+import random
 
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
@@ -57,9 +58,10 @@ def run_coflowsim(env):
     # t_actions = sample(env.action_space.shape[0])
     f = open("log/sample.json", "r")
     t_actions = json.load(f)["actions"]
+    random.shuffle(t_actions)
     print(len(t_actions))
     assert len(t_actions[0]) == env.action_space.shape[0], "ActionDim Error!"
-    for action in t_actions[:10000]:
+    for action in t_actions[:1000]:
         env.reset()
         for i in range(int(1e10)):
             _ , _, done, _ = env.step(action)
@@ -114,7 +116,7 @@ def config_env():
     args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
-    return CoflowSimEnv(gym)
+    return CoflowSimEnv(gym, False)
 
 def destroy_env():
     shutdownJVM()

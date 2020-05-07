@@ -8,6 +8,12 @@ def chengji(x):
         res = res*e
     return res
 
+def toFactor(x, init_limit=1024):
+    res = [x[0]/init_limit]
+    for i in range(1, len(x)):
+        res.append(x[i]/x[i-1])
+    return res
+
 def get_h_m_s(second):
     """
     transform from second to hour-minite-second
@@ -68,3 +74,4 @@ class Logger:
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
     pass
+    # print(toFactor([2,4,12,36], 2))

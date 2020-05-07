@@ -23,15 +23,17 @@ def makeMLFQVal(env, thresholds):
     if NO is 0:
         ## scale to normalization
         for i in range(NUM_MLFQ):
-            if thresholds[i] < 0:
-                thresholds[i] = thresholds[i]/2+1
-            else:
-                thresholds[i] = thresholds[i]*4+1
+            # if thresholds[i] < 0:
+            #     thresholds[i] = thresholds[i]/2+1
+            # else:
+            #     thresholds[i] = thresholds[i]*4+1
+            thresholds[i] = (thresholds[i]+1)*5
+        thresholds = np.clip(thresholds, 1.0001, 10)
 
         ## applied to MLFQ
         # baseline = [300*kb, mb, 3*mb, 10*mb, 30*mb, 100*mb, 1*gb, 10*gb, 100*gb]
-        # baseline = [10*mb, 100*mb, gb, 10*gb, 100*gb, tb, 10*tb, 100*tb, 1000*tb]
-        baseline = [10*kb, 100*kb, 1*mb, 10*mb, 100*mb, gb, 10*gb, 100*gb, tb]
+        baseline = [10*mb, 100*mb, gb, 10*gb, 100*gb, tb, 10*tb, 100*tb, 1000*tb]
+        # baseline = [10*kb, 100*kb, 1*mb, 10*mb, 100*mb, gb, 10*gb, 100*gb, tb]
         for i in range(NUM_MLFQ):
             thresholds[i] = thresholds[i]*baseline[i]
         return np.array(thresholds)
@@ -65,6 +67,16 @@ def makeMLFQVal(env, thresholds):
             initial = initial*thresholds[i]
             thresholds[i] = initial
         return np.array(thresholds)
+    if NO is 4: ## 7 or 10 queues
+        initial = 1*mb
+        for i in range(NUM_MLFQ):
+            thresholds[i] = (thresholds[i]+1)*5
+        thresholds = np.clip(thresholds, 0.01, 100)
+        for i in range(NUM_MLFQ):
+            initial = initial*thresholds[i]
+            thresholds[i] = initial
+        return np.array(thresholds)
+
 
 def loop(env):
     """Coflow Environment
@@ -86,7 +98,7 @@ def loop(env):
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 400
+    EXPLORE = 200
     TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
     IS_OU = True

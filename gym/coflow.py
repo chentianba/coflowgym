@@ -8,16 +8,16 @@ import json
 import math, sys, time
 from util import Logger
 
-# logger = Logger("log/mlfq.txt")
-logger = Logger("log/result.txt")
+logger = Logger("log/mlfq.txt")
+# logger = Logger("log/result.txt")
 
 class CoflowSimEnv(Env):
-    def __init__(self, gym):
+    def __init__(self, gym, debug=True):
         self.coflowsim = gym
         self.NUM_COFLOW = self.coflowsim.MAX_COFLOW # 10
         self.UNIT_DIM = 4 # id, width/1000, sent_bytes, duration_time/1000
         self.STATE_DIM = self.NUM_COFLOW*self.UNIT_DIM
-        self.ACTION_DIM = 6
+        self.ACTION_DIM = 9
 
         self.low_property = np.zeros((self.UNIT_DIM,))
         assert self.UNIT_DIM == 4, "UNIT_DIM != 4"
@@ -28,6 +28,8 @@ class CoflowSimEnv(Env):
 
         self.MB = 1024*1024 # 1MB = ? B
         self.__initialize()
+
+        self.debug = debug
 
     def __initialize(self):
         self.old_throughout = 0
@@ -45,7 +47,8 @@ class CoflowSimEnv(Env):
         obs = self.__parseObservation(obs)
         done = result["done"]
         mlfq = eval(result["MLFQ"])
-        logger.print("MLFQ: "+str(mlfq))
+        if self.debug:
+            logger.print("MLFQ: "+str(mlfq))
         # obs = self.coflowsim.printStats()
         # obs = np.zeros(self.observation_space.shape)
 
@@ -57,7 +60,7 @@ class CoflowSimEnv(Env):
         # reward = self.__calculate_reward(a_coflows, c_coflows)
         # reward = self.__cal_reward_2(a_coflows, c_coflows)
         # reward = self.__cal_reward_3(a_coflows, c_coflows)
-        reward = self.__cal_reward_4(a_coflows, c_coflows)
+        reward = self.__cal_reward_4(a_coflows, c_coflows) ## best
         # reward = self.__cal_reward_5(a_coflows, c_coflows, mlfq)
 
         # print("completed: ", [coflow[0] for coflow in c_coflows])
