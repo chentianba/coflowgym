@@ -3,6 +3,7 @@ from jpype import *
 import numpy as np
 
 from algo.ddpg import DDPG, OUNoise
+from algo.ddpg_lstm import DDPG_LSTM
 from coflow import CoflowSimEnv
 from util import get_h_m_s, get_now_time
 
@@ -162,6 +163,95 @@ def loop(env):
     env.close()
     print("Game is over!")
 
+def train_lstm(env):
+    """Coflow Environment
+    """
+    # thresholds = [1.0485760E7*(10**i) for i in range(9)]
+    thresholds = np.array([10]*9)
+    a_dim = env.action_space.shape[0]
+    s_dim = env.observation_space.shape[0]
+    a_bound = env.action_space.high
+    time_sequence = 10
+
+    print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
+    # agent = DDPG(a_dim, s_dim, a_bound)
+    agent = DDPG_LSTM(a_dim, s_dim, a_bound, time_sequence)
+    oun = OUNoise(a_dim, mu=0)
+
+    ################ hyper parameter ##############
+    agent.LR_A = 1e-4
+    agent.LR_C = 1e-3
+    agent.GAMMA = 0.99
+    agent.TAU = 0.001
+
+    epsilon = 1
+    EXPLORE = 200
+    TH = 20 # threshold MULT default is 10
+    PERIOD_SAVE_MODEL = True
+    IS_OU = True
+    var = 3
+    ###############################################3
+
+    ave_rs = []
+
+    begin_time = time.time()
+
+    for episode in range(1, 1000):
+        obs = env.reset()
+        ep_reward = 0
+        oun.reset()
+        epsilon -= (epsilon/EXPLORE)
+        ## record state in one episode
+        last_s = [[0]*s_dim]*(time_sequence-1)
+        last_s.append(obs)
+
+        ep_time = time.time()
+        for i in range(int(1e10)):
+            ## Add exploration noise
+            action_original = agent.choose_action(np.array(last_s))
+            # action_original = np.array(thresholds)
+            # action_original = (np.random.rand(a_dim))*2-1
+            if IS_OU:
+                action = action_original + max(0.01, epsilon)*oun.noise()
+            else:
+                action = np.clip(np.random.normal(action_original, var), -1, 1)
+
+            ## because of `tanh` activation which valued in [-1, 1], we need to scale
+            obs_n, reward, done, _ = env.step( makeMLFQVal(env, action) )
+            print("episode %s step %s"%(episode, i))
+            print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
+            print("action:", action.tolist(), "env_action:", makeMLFQVal(env, action).tolist())
+
+            last_s_ = last_s.copy()
+            del last_s_[0]
+            last_s_.append(obs_n)
+            agent.store_transition(np.array(last_s), action, reward, np.array(last_s_))
+            # print("last_s:", last_s)
+            # print("last_s_:", last_s_)
+            last_s = last_s_
+            # agent.store_transition(obs, action, reward, obs_n)
+
+            if agent.pointer > agent.BATCH_SIZE:
+                agent.learn()
+                var *= 0.9995
+            
+            obs = obs_n
+            ep_reward += reward
+            if done:
+                print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
+                result = env.getResult()
+                print("result: ", result, type(result))
+                print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
+                sys.stdout.flush()
+                break
+        if PERIOD_SAVE_MODEL and episode%10 == 0:
+            model_name = "%s/model_%s.ckpt"%(MODEL_DIR, episode)
+            agent.save(model_name)
+
+    env.close()
+    print("Game is over!")
+
+
 def config_env():
     # Configure the jpype environment
     jarpath = os.path.join(os.path.abspath("."))
@@ -192,6 +282,7 @@ if __name__ == "__main__":
     sys.stdout.flush()
 
     # main loop
-    loop(env)
+    # loop(env)
+    train_lstm(env)
 
     destroy_env()
