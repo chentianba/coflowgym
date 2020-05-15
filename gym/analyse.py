@@ -238,6 +238,38 @@ def analyse_mlfq():
         plt.xlabel("number of coflow")
         plt.ylabel("cdf")
     if True:
+        # analyse the rule of sent size in benchmark
+        # config: 7 queues, [10M, 100M, 1G, 10G, 100G, 1T]
+        with open("doc/benchmark_sentsize.txt") as f:
+            line = f.readline()
+            mlfqs = []
+            while line:
+                if line.startswith("coflow"):
+                    mlfqs = eval(line.split(":")[-1])
+                line = f.readline()
+            print("steps of benchmark: ", len(mlfqs))
+            sent_s = []
+            for coflow in mlfqs:
+                sent_s.extend(coflow)
+            N = 13
+            count = [0]*N
+            powers = []
+            for size in sent_s:
+                index = int(math.log10(size)) if size != 0 else 0
+                powers.append(index)
+                count[index] += 1
+            print(count)
+            data = np.array(count)/sum(count)
+            print(data)
+            plt.figure("Benchmark Sent Size")
+            plt.title("Distribution of sent size in Benchmark")
+            # plt.plot(range(N), data)
+            res = plt.hist(powers,bins=N,density=True)
+            vals, pos = res[0], res[1][:-1]
+            # plt.plot(pos, vals, 'r')
+            # for v, p in zip(vals, pos):
+            #     plt.text(p+0.5, v, "{:2f}".format(v))
+    if False:
         with open("log/result.txt") as f:
             mlfqs = []
             line = f.readline()

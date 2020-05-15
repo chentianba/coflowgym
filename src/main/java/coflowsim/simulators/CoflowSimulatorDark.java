@@ -259,6 +259,7 @@ public class CoflowSimulatorDark extends CoflowSimulator {
       }
       queueThresholds.add(Double.MAX_VALUE);
     //   System.out.println(queueThresholds.toString());
+    //   updateJobOrder();
       return true;
   }
 

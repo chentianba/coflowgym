@@ -136,6 +136,7 @@ def run_human(env):
     for episode in range(1):
         obs = env.reset()
         ep_reward = 0
+        acs = []
 
         for i in range(int(1e10)):
             # action = agent.choose_action(obs)
@@ -146,14 +147,15 @@ def run_human(env):
             # print(action)
             obs_n, reward, done, info = env.step( np.array(action) )
             # print(info)
-            active_coflows = np.array([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
-            print("active coflows in step",i,":", np.sort(active_coflows))
+            acs.append(sorted([coflow[2] for coflow in eval(info["obs"].split(":")[-1])]))
+            print("active coflows in step",i,":", np.array(acs[-1]))
             obs = obs_n
             ep_reward += reward
             if done:
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 result = env.getResult()
                 print("result: ", result, type(result))
+                print("coflow set:", acs)
                 break
     env.close()
     print("Game is over!")       
