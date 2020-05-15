@@ -1,7 +1,7 @@
 import sys, time, os
 from jpype import *
 import numpy as np
-import json
+import json, math
 import random
 
 from algo.ddpg import DDPG, OUNoise
@@ -102,7 +102,61 @@ def sample(a_dim):
     with open("log/sample.json", "w") as f:
         json.dump({"actions":actions}, f)
     return actions
-        
+
+def human_inst(env, obs):
+    unit_dim = env.UNIT_DIM
+    num_coflow = env.NUM_COFLOW
+    sent_bs = []
+    for i in range(num_coflow):
+        unit = obs[unit_dim*i:unit_dim*(i+1)]
+        # print(type(env.high_property), type(env.low_property), type(unit))
+        # actual value: id, width/1000, sent_bytes(B), duration_time/1000
+        actual_val = (env.high_property-env.low_property)*unit+env.low_property
+        sent_b = actual_val[2]
+        if actual_val[0] != 0:
+            sent_bs.append(sent_b)
+    sent_bs = sorted(sent_bs)
+    count = np.array([0]*15) # 1B, 10B, 100B
+    for sent in sent_bs:
+        if sent > 1:
+            index = int(math.log10(sent))
+        else:
+            index = 0
+        count[index] += 1
+
+    return count.reshape(5, 3)
+
+def run_human(env):
+    a_dim = env.action_space.shape[0]
+    s_dim = env.observation_space.shape[0]
+    a_bound = env.action_space.high
+
+    ###############################################
+
+    for episode in range(1):
+        obs = env.reset()
+        ep_reward = 0
+
+        for i in range(int(1e10)):
+            # action = agent.choose_action(obs)
+            inst = human_inst(env, obs)
+            # print(inst)
+            # action = eval(input("step %s input action:"%(i)))
+            action = [(10**i)*10*mb for i in range(6)]
+            # print(action)
+            obs_n, reward, done, info = env.step( np.array(action) )
+            # print(info)
+            active_coflows = np.array([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
+            print("active coflows in step",i,":", np.sort(active_coflows))
+            obs = obs_n
+            ep_reward += reward
+            if done:
+                print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
+                result = env.getResult()
+                print("result: ", result, type(result))
+                break
+    env.close()
+    print("Game is over!")       
 
 def config_env():
     # Configure the jpype environment
@@ -113,7 +167,7 @@ def config_env():
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -130,7 +184,8 @@ if __name__ == "__main__":
 
     # main loop
     # run(env)
-    run_coflowsim(env)
+    # run_coflowsim(env)
+    run_human(env)
     # sample(6)
 
     destroy_env()

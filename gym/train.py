@@ -121,9 +121,11 @@ def loop(env):
 
     for episode in range(1, 1000):
         obs = env.reset()
-        ep_reward = 0
         oun.reset()
         epsilon -= (epsilon/EXPLORE)
+
+        ep_reward = 0
+        mlfqs = []
 
         ep_time = time.time()
         for i in range(int(1e10)):
@@ -137,10 +139,12 @@ def loop(env):
                 action = np.clip(np.random.normal(action_original, var), -1, 1)
 
             ## because of `tanh` activation which valued in [-1, 1], we need to scale
-            obs_n, reward, done, _ = env.step( makeMLFQVal(env, action) )
+            obs_n, reward, done, info = env.step( makeMLFQVal(env, action) )
             print("episode %s step %s"%(episode, i))
             print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
             print("action:", action.tolist(), "env_action:", makeMLFQVal(env, action).tolist())
+            mlfqs.append(info["mlfq"])
+
             agent.store_transition(obs, action, reward, obs_n)
 
             if agent.pointer > agent.BATCH_SIZE:
@@ -151,6 +155,7 @@ def loop(env):
             ep_reward += reward
             if done:
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
+                print("MLFQs:", mlfqs)
                 result = env.getResult()
                 print("result: ", result, type(result))
                 print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
@@ -282,7 +287,7 @@ if __name__ == "__main__":
     sys.stdout.flush()
 
     # main loop
-    # loop(env)
-    train_lstm(env)
+    loop(env)
+    # train_lstm(env)
 
     destroy_env()

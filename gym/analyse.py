@@ -253,8 +253,8 @@ def analyse_mlfq():
             print("Length of samples:", len(mlfqs))
             print("count of Coflow in MLFQ is more than 1:", count/len(mlfqs))
 
-def analyse_samples():
-    with open("log/sample_1.txt") as f:
+def analyse_samples(file="log/sample_1.txt"):
+    with open(file) as f:
         actions = []
         results = []
         
@@ -386,6 +386,6 @@ if __name__ == "__main__":
 
     # dark_analyse()
 
-    analyse_samples()
+    analyse_samples("log/run_8000.txt")
 
     plt.show()

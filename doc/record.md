@@ -371,8 +371,74 @@ Dark在一个episode调度过程中，以10s为调度单位时，有43.48%左右
 
 3. LSTM优化
 
-代码还在编写中
+使用10个时间序列的LSTM模型处理过去的10个状态，结果：
+* 第一次
+![](/doc/img/lstm_res1.png)
+* 第二次
+![](/doc/img/lstm_res2.png)
+* 第三、四次都未收敛
 
+分析：可以看出，在200个探索周期后开始收敛，第一次收敛结果比DARK差，第二次收敛结果达到DARK级别，可以看出，它们的共性是前期探索不到正向样本
+
+通过连续的算法改进，觉得并不是算法本身不work，而是我们对环境建模出了问题  
+输出在每次调度决策时“活跃coflow的已发送大小”
+* 100coflows
+```
+active coflows: [0.0, 0.0, 0.0]
+active coflows: [0.0, 36238786561.117645]
+active coflows: [0.0, 66660735661.71961]
+active coflows: [86275767532.58607]
+active coflows: [87571602313.71089]
+active coflows: [0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 185202995310.61545]
+active coflows: [0.0, 0.0, 0.0, 0.0, 362844443538.4273]
+active coflows: [0.0, 523066541067.1351]
+active coflows: [0.0, 0.0, 665066739999.8082, 0.0]
+active coflows: [0.0, 790891255715.692]
+active coflows: [878176053134.786]
+active coflows: [0.0, 0.0, 0.0, 943405242562.0137]
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 986303622296.9448, 0.0]
+active coflows: [0.0, 1014553869480.8728]
+active coflows: [1036728233138.9584]
+active coflows: [1052840212774.1566]
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1062251744428.4736, 0.0]
+active coflows: [0.0, 0.0, 1068677962365.6012]
+active coflows: [1071385359656.9618]
+active coflows: [0.0, 1074069714207.8993]
+active coflows: [0.0, 0.0, 1076550344332.123]
+active coflows: [0.0, 0.0]
+active coflows: [0.0, 2507852532.4736414]
+active coflows: [0.0, 4004951966.265628]
+active coflows: []
+active coflows: [0.0]
+active coflows: [0.0]
+active coflows: []
+active coflows: []
+active coflows: []
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 0.0]
+active coflows: [37855922813.222496, 0.0]
+active coflows: [0.0, 0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 0.0]
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0, 53350498300.046234, 0.0, 0.0, 0.0]
+active coflows: [0.0, 62415466437.50254, 0.0]
+active coflows: []
+active coflows: [0.0]
+active coflows: [0.0]
+active coflows: []
+active coflows: [0.0, 0.0, 0.0, 0.0, 0.0]
+active coflows: []
+
+episode 0: step 45, ep_reward -93.5111317835039
+result:  326688.0 <java class 'java.lang.String'>
+Game is over!
+```
+* benchmark
+```
+```
+可以看出，活跃coflow的已发送大小中包含了大量的零值，并且这些零值的coflow在当前step会被分配在优先级最高的coflow中，在下个step这些coflow往往会在一个step中传输完成，这样会导致设置的队列阈值并没有起到很好的“划分coflow大小”的作用，在这种情况下队列阈值的配置实际上并无优化的必要
 
 ### 第×××次实验设置
 
