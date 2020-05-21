@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 from analyse import plot_compare, validate_reward
 from benchdata import exp4_benchmark_data
@@ -17,18 +18,23 @@ def analyse_test():
     plt.show()
 
 def f():
-    a = np.arange(10)
-    b = a+np.random.randn(10,)
-    plt.scatter(a, b)
+    from scipy.stats import gaussian_kde
+    import seaborn as sns
+    a = np.array([1,1,1,1,2,2,2,3,3,4])
+    kernel = gaussian_kde(a)
 
-    z = np.poly1d(np.polyfit(a, b, 1))
-    c = z(a)
-    plt.plot(a, c)
+    sns.distplot(a)
 
+    print(type(kernel))
+    x = np.linspace(-1, 6, 100)
+    print(kernel.integrate_box(-math.inf, 5))
+    y = kernel.pdf(x)
+    plt.figure()
+    plt.plot(x, y)
     plt.show()
     
 
 if __name__ == "__main__":
     pass
-    analyse_test()
-    # f()
+    # analyse_test()
+    f()

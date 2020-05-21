@@ -5,7 +5,7 @@ import numpy as np
 from algo.ddpg import DDPG, OUNoise
 from algo.ddpg_lstm import DDPG_LSTM
 from coflow import CoflowSimEnv
-from util import get_h_m_s, get_now_time
+from util import get_h_m_s, get_now_time, KDE, prepare_pm
 
 if not os.path.exists("./models"):
     os.mkdir("./models")
@@ -89,6 +89,12 @@ def makeMLFQVal(env, thresholds):
     if NO is 6: ## 7 or 10 queues
         pass
 
+def action_with_kde(kde, action):
+    action = np.clip(action, -1, 1)
+    action = sorted(action)
+    # sent_s = np.log10([e for e in sentsize if e != 0])
+    acts = [kde.get_val((a+1)/2) for a in action]
+    return np.power(10, acts)
 
 def loop(env):
     """Coflow Environment
@@ -117,6 +123,7 @@ def loop(env):
     var = 3
     ###############################################3
 
+    kde = KDE(prepare_pm())
     ave_rs = []
 
     begin_time = time.time()
@@ -128,6 +135,9 @@ def loop(env):
 
         ep_reward = 0
         mlfqs = []
+        kde.print()
+        kde.update()
+        sentsize = []
 
         ep_time = time.time()
         for i in range(int(1e10)):
@@ -141,11 +151,16 @@ def loop(env):
                 action = np.clip(np.random.normal(action_original, var), -1, 1)
 
             ## because of `tanh` activation which valued in [-1, 1], we need to scale
-            obs_n, reward, done, info = env.step( makeMLFQVal(env, action) )
+            step_action = action_with_kde(kde, action)
+            # obs_n, reward, done, info = env.step( makeMLFQVal(env, action) )
+            obs_n, reward, done, info = env.step(step_action)
             print("episode %s step %s"%(episode, i))
             print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
-            print("action:", action.tolist(), "env_action:", makeMLFQVal(env, action).tolist())
-            mlfqs.append(info["mlfq"])
+            print("action:", action.tolist(), "step action:", step_action)
+            # mlfqs.append(info["mlfq"])
+            ac = [coflow[2] for coflow in eval(info["obs"].split(":")[-1])]
+            sentsize.extend(ac)
+            print("action coflow:", np.array(sorted(ac)))
 
             agent.store_transition(obs, action, reward, obs_n)
 
@@ -156,6 +171,7 @@ def loop(env):
             obs = obs_n
             ep_reward += reward
             if done:
+                kde.push(np.log10([e for e in sentsize if e != 0]))
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 print("MLFQs:", mlfqs)
                 result = env.getResult()
@@ -268,11 +284,11 @@ def config_env():
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_250.txt"] # 6915640.0
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)

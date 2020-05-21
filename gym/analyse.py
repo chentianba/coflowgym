@@ -14,6 +14,7 @@ configuration = [
     [1.5923608E7, 1.3596456E7, 7.337872E6], # test_150_250  ## 4
     [3615440.0, 2906384.0, 2474200.0], # test_200_225 ## 5
 ]
+choice = 1
 
 def stats_action(file):
     with open(file, 'r') as f:
@@ -192,7 +193,7 @@ def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
         comp = configuration[0]
     else:
         # comp = [326688.0, 612776.0, 281880.0]
-        comp = configuration[5]
+        comp = configuration[choice]
     plt.plot(x, result, 'b.-')
     plt.plot(x, [comp[0]]*len(x), "red") # DARK
     plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
@@ -274,7 +275,8 @@ def analyse_mlfq():
                 count[index] += 1
             print("count:", count)
             data = np.array(count)/sum(count)
-            print(data)
+            print("data", data)
+            print("powers:", powers)
             plt.figure("Benchmark Sent Size")
             plt.title("Distribution of sent size in Benchmark")
             # plt.plot(range(N), data)

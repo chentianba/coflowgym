@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import datetime
-import os, sys
-import matplotlib.pyplot as plt
+import os, sys, math
+from scipy.stats import gaussian_kde
 
 def chengji(x):
     """
@@ -88,6 +88,7 @@ def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
             for reduce in words[4+m:]:
                 total += eval(reduce.split(":")[-1])
             shuffle_t.append(total)
+        # import matplotlib.pyplot as plt
         # plt.figure("Coflow Size")
         # plt.plot(shuffle_t)
         # plt.show()
@@ -104,6 +105,22 @@ def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
             f.write(line)
             f.write("\n")
 
+def prepare_pm():
+    with open("doc/benchmark_sentsize.txt") as f:
+        line = f.readline()
+        mlfqs = []
+        while line:
+            if line.startswith("coflow"):
+                mlfqs = eval(line.split(":")[-1])
+            line = f.readline()
+    print("steps of benchmark: ", len(mlfqs))
+    sent_s = []
+    for coflow in mlfqs:
+        sent_s.extend(coflow)
+    sent_s = [e for e in sent_s if e != 0]
+    sent_s = np.log10(sent_s)
+    return sent_s
+
 class Logger:
     def __init__(self, file):
         assert type(file) == str, "please given a right file of 'str'."
@@ -117,8 +134,62 @@ class Logger:
         log.write(info+"\n")
         log.close()
 
+class KDE():
+    def __init__(self, init, size=10000):
+        self.pool = list(init)
+        self.size = size
+        self.pointer = len(self.pool)
+
+        # self.max_val = 0
+        self.GAP = 20
+        self.kde = gaussian_kde(self.pool)
+    
+    def push(self, data):
+        self.pool.extend(data)
+        self.pointer += len(data)
+        if self.pointer > self.size:
+            self.pool = self.pool[-self.size:]
+            self.pointer = self.size
+    
+    def update(self):
+        if self.pool == []:
+            self.kde = gaussian_kde([0, 1])
+        else:
+            self.kde = gaussian_kde(self.pool)
+    
+    def get_val(self, prob):
+        epsilon = 0.001
+        v_min = 0
+        v_max = self.GAP
+        if prob < self.kde.integrate_box(-math.inf, v_min):
+            return v_min
+        if prob > self.kde.integrate_box(-math.inf, v_max):
+            return v_max
+        v = (v_min+v_max)/2
+        p = self.kde.integrate_box(-math.inf, v)
+        while abs(p - prob) > epsilon:
+            if p > prob:
+                v_max = v
+            else:
+                v_min = v
+            v = (v_max+v_min)/2
+            p = self.kde.integrate_box(-math.inf, v)
+        return v
+    
+    def print(self):
+        x = np.arange(0, 15)
+        print("In KDE:", self.kde.pdf(x))
+
+def test():
+    kde = KDE([1,1,1,1,2,2,2,3,3,4])
+    # kde.push()
+    kde.update()
+    print(kde.get_val(0.9931005847427432))
+
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
     pass
     # print(toFactor([2,4,12,36], 2))
-    make100coflows()
+    # make100coflows()
+    # makePM()
+    test()
