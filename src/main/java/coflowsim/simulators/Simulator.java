@@ -36,6 +36,7 @@ public abstract class Simulator {
   double deadlineMultRandomFactor;
 
   protected long CURRENT_TIME = 0;
+  protected int stepJobsAdded = 0;
 
   private int numActiveTasks = 0;
 
@@ -257,7 +258,7 @@ public abstract class Simulator {
 
         Utils.log("\n=====> current_step_time = "+CURRENT_TIME);
 
-        int jobsAdded = 0;
+        stepJobsAdded = 0;
         // ArrayList<Job> obsJobs = new ArrayList<Job>();
 
         // Queue up all tasks in all jobs within SIMULATION_TIMESTEP
@@ -278,18 +279,13 @@ public abstract class Simulator {
 
             // One job added
             j.wasAdmitted = true;
-            jobsAdded++;
+            stepJobsAdded++;
             uponJobAdmission(j);
         }
 
-        // Stuff to do on new job arrival
-        if (jobsAdded > 0) {
-            afterJobAdmission(CURRENT_TIME);
-        }
-
-        for (Job j : activeJobs.values()) {
-            // obsJobs.add(j);
-        }
+        // for (Job j : activeJobs.values()) {
+        //     // obsJobs.add(j);
+        // }
         // System.out.println("activeJobs size: "+activeJobs.values().size());
         return false;
     }
@@ -314,6 +310,11 @@ public abstract class Simulator {
             beforeJobs.add(t);
         }
         Utils.log("here");
+
+        // Stuff to do on new job arrival
+        if (stepJobsAdded > 0) {
+            afterJobAdmission(CURRENT_TIME);
+        }
 
         for (long i = 0; i < EPOCH_IN_MILLIS; i += Constants.SIMULATION_QUANTA) {
 

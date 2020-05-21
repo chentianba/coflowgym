@@ -86,6 +86,8 @@ def makeMLFQVal(env, thresholds):
             initial = initial*thresholds[i]
             thresholds[i] = initial
         return np.array(thresholds)
+    if NO is 6: ## 7 or 10 queues
+        pass
 
 
 def loop(env):
@@ -265,8 +267,13 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_250.txt"] # 6915640.0
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
+    print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym)

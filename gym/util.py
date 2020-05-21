@@ -1,8 +1,12 @@
 import numpy as np
 from datetime import datetime
 import os, sys
+import matplotlib.pyplot as plt
 
 def chengji(x):
+    """
+    calculate the product of x, e.g. [2,3,5]->30
+    """
     res = 1
     for e in x:
         res = res*e
@@ -17,6 +21,7 @@ def toFactor(x, init_limit=1024):
 def get_h_m_s(second):
     """
     transform from second to hour-minite-second
+    return a string
     """
     if second <= 0:
         return 0, 0, 0
@@ -25,9 +30,11 @@ def get_h_m_s(second):
     return "%sH %sM %sS"%(h, m, s)
 
 def get_now_time():
+    """
+    return a string of Y-M-D-H-M-S
+    """
     now = datetime.now()
-    return "%s-%s-%s-%s-%s-%s"%(now.year, now.month, now.day, now.hour, now.minute, now.second
-)
+    return "%s-%s-%s-%s-%s-%s"%(now.year, now.month, now.day, now.hour, now.minute, now.second)
 
 def cal_limit(file):
     """
@@ -58,6 +65,45 @@ def cal_limit(file):
             # print(c_width, t_size)
         return width, size
 
+def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
+    time = []
+    shuffle_t = []
+    lines = []
+    target = []
+    with open(benchmark_file, "r") as f:
+
+        line = f.readline()
+        num_machines, num_jobs = (eval(word) for word in line.split())
+        print("Number of machines:", num_machines)
+        print("Number of jobs:", num_jobs)
+        for _ in range(num_jobs):
+            line = f.readline()
+            lines.append(line)
+
+            words = line.split()
+            time.append(eval(words[1]))
+
+            m = eval(words[2])
+            total = 0 ## unit is MB
+            for reduce in words[4+m:]:
+                total += eval(reduce.split(":")[-1])
+            shuffle_t.append(total)
+        # plt.figure("Coflow Size")
+        # plt.plot(shuffle_t)
+        # plt.show()
+        start, end = 0, 250
+        start_time = time[start]
+        for index in range(start, end):
+            line = lines[index]
+            words = line.split()
+            t_line = "%s %s %s"%(index-start+1, time[index]-start_time, " ".join(words[2:]))
+            target.append(t_line)
+    with open("scripts/test_%s_%s.txt"%(start, end), "w") as f:
+        f.write("%s %s\n"%(num_machines, end-start))
+        for line in target:
+            f.write(line)
+            f.write("\n")
+
 class Logger:
     def __init__(self, file):
         assert type(file) == str, "please given a right file of 'str'."
@@ -75,3 +121,4 @@ if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
     pass
     # print(toFactor([2,4,12,36], 2))
+    make100coflows()

@@ -5,6 +5,16 @@ import sys, math
 from benchdata import exp4_benchmark_data
 from util import toFactor
 
+## DARK / FIFO / SEBF
+configuration = [
+    [2.4247392E7, 4.3473352E7, 1.5005968E7], # benchmark
+    [326688.0, 612776.0, 281880.0],   # 100coflows
+    [6915640.0, 4483152.0, 3461920.0], # test_200_250 ## 2
+    [2214624.0, 4509552.0, 1952872.0], # test_150_200  ## 3
+    [1.5923608E7, 1.3596456E7, 7.337872E6], # test_150_250  ## 4
+    [3615440.0, 2906384.0, 2474200.0], # test_200_225 ## 5
+]
+
 def stats_action(file):
     with open(file, 'r') as f:
         actions = []
@@ -88,17 +98,19 @@ def benchmark_analyse(benchmark_file):
         # print(mappers)
         # print(reducers)
         shuffle_t = np.array(shuffle_t)
-        plt.figure()
+        plt.figure("benchmark_analyse")
 
         plt.subplot(221)
-        plt.plot(shuffle_t)
+        plt.scatter(range(1, 1+len(shuffle_t)), shuffle_t)
         plt.xlabel("No")
         plt.ylabel("shuffle size/MB")
         
         plt.subplot(222)
-        plt.plot(shuffle_t[:100])
+        start, end = 200, 225+1
+        plt.scatter(range(start, end), shuffle_t[start:end])
         plt.xlabel("No")
         plt.ylabel("shuffle size/MB")
+        # print("shuffle_t(%s, %s):%s"%(start, end-1, shuffle_t[start:end]))
 
         plt.subplot(223)
         plt.plot(time, shuffle_t)
@@ -110,11 +122,11 @@ def benchmark_analyse(benchmark_file):
         plt.xlabel("No")
         plt.ylabel("width")
 
-        plt.figure()
-        test_sf = shuffle_t[:100]
+        plt.figure("test_%s_%s"%(start, end-1))
+        test_sf = shuffle_t[start:end]
         test_cdf = np.array(toCDF(test_sf))
-        print("100coflows Percentile(MB):", toPercentile(test_cdf, num=7))
-        print("Benchmark Percentile(MB):", toPercentile(toCDF(shuffle_t), num=7))
+        print("test_%s_%s coflows Percentile(MB):"%(start, end-1), toPercentile(test_cdf, num=10))
+        print("Benchmark Percentile(MB):", toPercentile(toCDF(shuffle_t), num=10))
         plt.plot(test_cdf[:,0], test_cdf[:,1])
         plt.xlabel("shuffle size/MB")
         plt.ylabel("probability")
@@ -176,9 +188,11 @@ def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
     x = list(range(len(result)))
 
     if is_benchmark:
-        comp = [2.4247392E7, 4.3473352E7, 1.5005968E7]
+        # comp = [2.4247392E7, 4.3473352E7, 1.5005968E7]
+        comp = configuration[0]
     else:
-        comp = [326688.0, 612776.0, 281880.0]
+        # comp = [326688.0, 612776.0, 281880.0]
+        comp = configuration[5]
     plt.plot(x, result, 'b.-')
     plt.plot(x, [comp[0]]*len(x), "red") # DARK
     plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
@@ -258,13 +272,13 @@ def analyse_mlfq():
                 index = int(math.log10(size)) if size != 0 else 0
                 powers.append(index)
                 count[index] += 1
-            print(count)
+            print("count:", count)
             data = np.array(count)/sum(count)
             print(data)
             plt.figure("Benchmark Sent Size")
             plt.title("Distribution of sent size in Benchmark")
             # plt.plot(range(N), data)
-            res = plt.hist(powers,bins=N,density=True)
+            res = plt.hist(powers,bins=N*2,density=True)
             vals, pos = res[0], res[1][:-1]
             # plt.plot(pos, vals, 'r')
             # for v, p in zip(vals, pos):
@@ -412,12 +426,12 @@ if __name__ == "__main__":
 
     # stats_action("log/log.txt")
     
-    analyse_mlfq()
+    # analyse_mlfq()
 
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 
     # dark_analyse()
 
-    analyse_samples("log/run_8000.txt")
+    # analyse_samples("log/run_8000.txt")
 
     plt.show()

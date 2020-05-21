@@ -7,7 +7,7 @@ import random
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
 from train import makeMLFQVal
-from util import chengji
+from util import chengji, get_h_m_s
 
 kb, mb, gb, tb = 1024**1, 1024**2, 1024**3, 1024**4
 
@@ -126,6 +126,28 @@ def human_inst(env, obs):
 
     return count.reshape(5, 3)
 
+def instruction(coflows):
+    c_set = set(coflows)
+    c_set = sorted(c_set)
+    n = len(c_set)
+    N = 7
+    threshold = []
+    if n <= 1:
+        return [(10**i)*10*mb for i in range(6)]
+    if n <= N:
+        for i in range(1, n):
+            threshold.append((c_set[i]+c_set[i-1])/2)
+        while len(threshold) < N-1:
+            threshold.append(threshold[-1]*10)
+        return threshold
+    else:
+        m = int(n/N)
+        for i in range(n%N):
+            threshold.append((c_set[(i+1)*(m+1)]+c_set[(i+1)*(m+1)-1])/2)
+        for i in range(n%N, N-1):
+            threshold.append((c_set[(i+1)*m+n%N]+c_set[(i+1)*m+n%N-1])/2)
+        return threshold
+
 def run_human(env):
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
@@ -137,18 +159,22 @@ def run_human(env):
         obs = env.reset()
         ep_reward = 0
         acs = []
+        ac = []
 
         for i in range(int(1e10)):
             # action = agent.choose_action(obs)
-            inst = human_inst(env, obs)
-            # print(inst)
-            # action = eval(input("step %s input action:"%(i)))
-            action = [(10**i)*10*mb for i in range(6)]
+            # inst = human_inst(env, obs)
+            inst = instruction(ac)
+            print("active coflows in step %s:"%(i), np.array(ac))
+            print("inst:", np.array(inst))
+            action = inst
+            # action = [(10**i)*10*mb for i in range(6)]
             # print(action)
             obs_n, reward, done, info = env.step( np.array(action) )
             # print(info)
-            acs.append(sorted([coflow[2] for coflow in eval(info["obs"].split(":")[-1])]))
-            print("active coflows in step",i,":", np.array(acs[-1]))
+            ac = sorted([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
+            acs.append(ac)
+            # print("active coflows in step",i,":", np.array(acs[-1]))
             obs = obs_n
             ep_reward += reward
             if done:
@@ -158,7 +184,7 @@ def run_human(env):
                 print("coflow set:", acs)
                 break
     env.close()
-    print("Game is over!")       
+    print("Game is over!")
 
 def config_env():
     # Configure the jpype environment
@@ -168,8 +194,15 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_250.txt"] # 6915640.0
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_175_200.txt"] # 
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_0_250.txt"] # 
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -185,9 +218,11 @@ if __name__ == "__main__":
     # print("training begins: %s"%(time.asctime(time.localtime(time.time()))))
 
     # main loop
+    begin = time.time()
     # run(env)
     # run_coflowsim(env)
     run_human(env)
     # sample(6)
+    print("Consume Time:", get_h_m_s(time.time()-begin))
 
     destroy_env()
