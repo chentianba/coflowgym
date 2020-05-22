@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import codecs
 import sys, math
 from benchdata import exp4_benchmark_data
-from util import toFactor
+from util import toFactor, prepare_pm
 
 ## DARK / FIFO / SEBF
 configuration = [
@@ -132,6 +132,15 @@ def benchmark_analyse(benchmark_file):
         plt.xlabel("shuffle size/MB")
         plt.ylabel("probability")
 
+        plt.figure("sentsize analyse")
+        import scipy.stats as st
+        import seaborn as sns 
+        sns.set()
+        sent_s = prepare_pm()
+        sns.distplot(sent_s, fit=st.norm, fit_kws={"color":"r", "label":"norm"}, kde_kws={"label":"KDE"})
+        sns.utils.axlabel("sentsize(log10)", "")
+        sns.utils.plt.legend()
+
 def dark_analyse():
     with open("doc/dark.txt", "r") as f:
         durations = []
@@ -190,15 +199,16 @@ def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
 
     if is_benchmark:
         # comp = [2.4247392E7, 4.3473352E7, 1.5005968E7]
-        comp = configuration[0]
+        comp = configuration[0]+[1.9205752E7]
     else:
         # comp = [326688.0, 612776.0, 281880.0]
-        comp = configuration[choice]
+        comp = configuration[choice] + configuration[choice][-1]
     plt.plot(x, result, 'b.-')
     plt.plot(x, [comp[0]]*len(x), "red") # DARK
     plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
     plt.plot(x, [comp[2]]*len(x), "lawngreen") # SEBF
-    plt.legend(["DRL", "DARK", "FIFO", "SEBF"])
+    plt.plot(x, [comp[3]]*len(x), "sandybrown") # Target
+    plt.legend(["DRL", "DARK", "FIFO", "SEBF", "Target"])
     plt.xlabel("episode")
     plt.ylabel("ep_runtime")
 
@@ -407,7 +417,7 @@ def analyse_log(exp_no):
         result, ep_reward = np.array(result), np.array(ep_reward)
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
-        plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
+        plot_compare(result, ep_reward, is_benchmark=True, newfigure=False)
         # plt.figure("Exp")
         # plt.subplot(221)
         # plt.subplot(222)

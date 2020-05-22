@@ -238,3 +238,4 @@ ReLU不需要输入归一化来防止达到饱和，卷积神经网络大多使�
 2. [DDPG论文阅读](https://zhuanlan.zhihu.com/p/26754280)
 3. [强化学习在美团“猜你喜欢”的实践](https://www.jianshu.com/p/ed8941a64388)
 4. [重尾分布](https://www.cnblogs.com/huangshiyu13/p/6217180.html)
+5. [参数估计和非参数估计](https://blog.csdn.net/drrlalala/article/details/45533821)

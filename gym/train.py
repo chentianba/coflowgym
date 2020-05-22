@@ -116,7 +116,7 @@ def loop(env):
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 200
+    EXPLORE = 70
     TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
     IS_OU = True
@@ -160,7 +160,7 @@ def loop(env):
             # mlfqs.append(info["mlfq"])
             ac = [coflow[2] for coflow in eval(info["obs"].split(":")[-1])]
             sentsize.extend(ac)
-            print("action coflow:", np.array(sorted(ac)))
+            print("active coflow:", np.array(sorted(ac)))
 
             agent.store_transition(obs, action, reward, obs_n)
 
@@ -283,8 +283,8 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
+    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_250.txt"] # 6915640.0
