@@ -166,7 +166,7 @@ def run_human(env):
             # inst = human_inst(env, obs)
             inst = instruction(ac)
             print("active coflows in step %s:"%(i), np.array(ac))
-            print("inst:", np.array(inst))
+            # print("inst:", np.array(inst))
             action = inst
             # action = [(10**i)*10*mb for i in range(6)]
             # print(action)
@@ -202,7 +202,7 @@ def config_env():
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_175_200.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_0_250.txt"] # 
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)

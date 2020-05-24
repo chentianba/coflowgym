@@ -65,6 +65,41 @@ def cal_limit(file):
             # print(c_width, t_size)
         return width, size
 
+def parse_benchmark(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
+    """
+    Parse coflows in Benchmark `scripts/FB2010-1Hr-150-0.txt`
+    return
+    -------
+        time:
+        mappers:
+        reducers:
+        shuffle_t:
+    """
+    with open(benchmark_file, "r") as f:
+        time = []
+        mappers = []
+        reducers = []
+        shuffle_t = []
+
+        line = f.readline()
+        num_machines, num_jobs = (eval(word) for word in line.split())
+        print("Number of machines:", num_machines)
+        print("Number of jobs:", num_jobs)
+        for i in range(num_jobs):
+            line = f.readline()
+            words = line.split()
+            time.append(eval(words[1]))
+
+            m = eval(words[2])
+            r = eval(words[3+m])
+            total = 0
+            for reduce in words[4+m:]:
+                total += eval(reduce.split(":")[-1])
+            mappers.append(m)
+            reducers.append(r)
+            shuffle_t.append(total)
+        return time, mappers, reducers, shuffle_t
+
 def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
     time = []
     shuffle_t = []
@@ -92,7 +127,7 @@ def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
         # plt.figure("Coflow Size")
         # plt.plot(shuffle_t)
         # plt.show()
-        start, end = 0, 250
+        start, end = 0, 195
         start_time = time[start]
         for index in range(start, end):
             line = lines[index]
@@ -181,10 +216,12 @@ class KDE():
         print("In KDE:", self.kde.pdf(x))
 
 def test():
-    kde = KDE([1,1,1,1,2,2,2,3,3,4])
-    # kde.push()
-    kde.update()
-    print(kde.get_val(0.9931005847427432))
+    action = [0.1, 0.2, 0.3, 0.4]
+    a = [0]
+    for e in action:
+        a.append(a[-1]+e)
+    del a[0]
+    print(a)
 
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB

@@ -6,7 +6,7 @@ import time
 
 ###############################  DDPG  ####################################
 
-class DDPG(object):
+class DDPGProb(object):
     #####################  hyper parameters  ####################
     LR_A = 0.001    # learning rate for actor， default is 0.001
     LR_C = 0.002    # learning rate for critic, default is 0.002
@@ -106,13 +106,13 @@ class DDPG(object):
             b1 = tf.get_variable("b1", [1, n_l1], trainable=trainable)
             net1 = tf.nn.relu(tf.matmul(s, w1) + b1)
             ## BN
-            net1 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(s, w1) + b1, training=True, name="BN_1"))
+            # net1 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(s, w1) + b1, training=True, name="BN_1"))
             w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
             b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
             net = tf.nn.relu(tf.matmul(net1, w2) + b2)
             ## BN
-            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
-            a = tf.layers.dense(net, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
+            # net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
+            a = tf.layers.dense(net, self.a_dim, activation=tf.nn.softmax, name='a', trainable=trainable)
 
             tf.summary.histogram(scope+"/w1", w1)
             tf.summary.histogram(scope+"/b1", b1)
@@ -129,13 +129,13 @@ class DDPG(object):
             b1 = tf.get_variable('b1', [1, n_l1], trainable=trainable)
             data = tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1
             ## BN
-            data = tf.layers.batch_normalization(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1, training=True, name="BN_1")
+            # data = tf.layers.batch_normalization(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1, training=True, name="BN_1")
             net1 = tf.nn.relu(data)
             w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
             b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
             net = tf.nn.relu(tf.matmul(net1, w2) + b2)
             ## BN
-            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
+            # net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
 
             tf.summary.histogram(scope+"/w1_s", w1_s)
             tf.summary.histogram(scope+"/w1_a", w1_a)
@@ -153,174 +153,3 @@ class DDPG(object):
         saver = tf.train.Saver()
         with tf.Session() as sess:
             saver.restore(self.sess, filename)
-
-class OUNoise:
-    """docstring for OUNoise"""
-    def __init__(self,action_dimension,mu=0, theta=0.15, sigma=0.2):
-        self.action_dimension = action_dimension
-        self.mu = mu
-        self.theta = theta
-        self.sigma = sigma
-        self.state = np.ones(self.action_dimension) * self.mu
-        self.reset()
-
-    def reset(self):
-        self.state = np.ones(self.action_dimension) * self.mu
-
-    def noise(self):
-        x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * nr.randn(len(x))
-        self.state = x + dx
-        return self.state
-
-###############################  training  ####################################
-###############################  A Demo  ####################################
-MAX_EPISODES = 2000
-MAX_EP_STEPS = 200 # default is 200
-RENDER = False
-ENV_NAME = 'Pendulum-v0'
-A_BOUND = 2
-
-# RENDER = True
-MAX_EP_STEPS = 1000
-ENV_NAME = "MountainCarContinuous-v0"
-A_BOUND = 1
-
-EXPLORE = 70
-pre_trained = False
-
-def train():
-    env = gym.make(ENV_NAME)
-    env = env.unwrapped
-    env.seed(1)
-
-    s_dim = env.observation_space.shape[0]
-    a_dim = env.action_space.shape[0]
-    a_bound = np.array([np.float64(A_BOUND)])
-    print(a_bound, env.action_space.high, env.action_space.low)
-
-    oun = OUNoise(a_dim, mu=0.4)
-
-    ddpg = DDPG(a_dim, s_dim, a_bound)
-
-    if pre_trained:
-        ddpg.load('./log/model.ckpt')
-
-    var = 3  # control exploration
-    t1 = time.time()
-    ave_rs = []
-    his_step = []
-
-    def test():
-        TEST_EPISODE = 10
-        ep_steps = 0
-        test_reward = 0
-        for _ in range(TEST_EPISODE):
-            s = env.reset()
-            for t in range(MAX_EP_STEPS):
-                # env.render()
-                a = ddpg.choose_action(s)
-                s, r, done, _ = env.step(a)
-                test_reward += r
-                if t == MAX_EP_STEPS-1 or done:
-                    # print("in test: consume %s steps!"%(t))
-                    ep_steps += t
-                    break
-        return ep_steps//TEST_EPISODE, test_reward//TEST_EPISODE
-
-    epsilon = 1
-    for episode in range(1, 1+MAX_EPISODES):
-        s = env.reset()
-        ep_reward = 0
-        oun.reset()
-        epsilon -= (epsilon/EXPLORE)
-
-        for j in range(MAX_EP_STEPS):
-            if RENDER:
-                env.render()
-
-            # Add exploration noise
-            action_original = ddpg.choose_action(s)
-            # a = 2*a-1 ## for sigmoid
-            # a = np.clip(np.random.normal(action_original, var), -1*a_bound[0], a_bound[0])    # add randomness to action selection for exploration
-            a = action_original+max(0.01, epsilon)*oun.noise()
-            s_, r, done, _ = env.step(a)
-            # print("step:", j, s, r, a)
-            # if r < -5:
-            #     r = r*10
-
-            ddpg.store_transition(s, a, r, s_)
-
-            if ddpg.pointer > ddpg.BATCH_SIZE:
-                if ddpg.pointer % 1 == 0:
-                    var *= .9995    # decay the action randomness
-                ddpg.learn()
-                if ddpg.pointer == (ddpg.BATCH_SIZE+1):
-                    print("Begin learning...")
-
-            s = s_
-            ep_reward += r
-            if j == MAX_EP_STEPS-1 or done:
-                # print('Episode:', episode, ' Reward: %i' % int(ep_reward), 'Explore: %.2f' % var, )
-                # if ep_reward > -300:RENDER = True
-                his_step.append(j)
-                print("episode", episode, "consume", j, "steps, epsilon =", epsilon,"var = ", var, "ep_reward:", ep_reward)
-                break
-        if episode % 20 == 0:
-            t_steps, t_rewards = test()
-            print("in test: average consume %s steps and ep_rewards is %s!"%(t_steps, t_rewards))
-            if ENV_NAME == "MountainCarContinuous-v0" and t_steps < 180:
-                ddpg.save("./log/model.ckpt")
-                break
-            if ENV_NAME == 'Pendulum-v0' and t_rewards > -150:
-                ddpg.save("./log/model.ckpt")
-                break
-        # if (len(his_step) >= 5 and sum(his_step[-10:])/10 < 180):
-        #     ddpg.save("./log/model.ckpt")
-        #     return
-        # sys.stdout.flush()
-    print('Running time: ', time.time() - t1)
-
-
-def validate():
-    env = gym.make(ENV_NAME)
-    env = env.unwrapped
-    env.seed(1)
-
-    s_dim = env.observation_space.shape[0]
-    a_dim = env.action_space.shape[0]
-    a_bound = np.array([np.float64(A_BOUND)])
-    print(a_bound, env.action_space.high, env.action_space.low)
-
-    oun = OUNoise(a_dim, mu=0.4)
-
-    ddpg = DDPG(a_dim, s_dim, a_bound)
-
-    ddpg.load('./log/model.ckpt')
-
-    var = 3  # control exploration
-    t1 = time.time()
-    
-    for i in range(10):
-        state = env.reset()
-        ep_r = 0
-        for j in range(MAX_EP_STEPS):
-            env.render()
-            action = ddpg.choose_action(state) # direct action for test
-            state, reward, done, _ = env.step(action)
-            ep_r += reward
-            if j==MAX_EP_STEPS-1 or done:
-                print("in validate: consume %s steps and ep_reward is %s!"%(j, ep_r))
-                break
-    print('Running time: ', time.time() - t1)
-
-if __name__ == "__main__":
-    # sys.stdout = open("log/%s-log.txt"%(ENV_NAME), "w")
-
-    TRAINABLE = True
-    # TRAINABLE = False
-    if TRAINABLE:
-        train()
-    else:
-        validate()
-    pass

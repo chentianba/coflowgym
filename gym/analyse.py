@@ -1,20 +1,21 @@
 import numpy as np 
-import matplotlib.pyplot as plt
 import codecs
 import sys, math
+import matplotlib.pyplot as plt
 from benchdata import exp4_benchmark_data
-from util import toFactor, prepare_pm
+from util import toFactor, prepare_pm, parse_benchmark
 
 ## DARK / FIFO / SEBF
 configuration = [
-    [2.4247392E7, 4.3473352E7, 1.5005968E7], # benchmark
-    [326688.0, 612776.0, 281880.0],   # 100coflows
-    [6915640.0, 4483152.0, 3461920.0], # test_200_250 ## 2
-    [2214624.0, 4509552.0, 1952872.0], # test_150_200  ## 3
-    [1.5923608E7, 1.3596456E7, 7.337872E6], # test_150_250  ## 4
-    [3615440.0, 2906384.0, 2474200.0], # test_200_225 ## 5
+    [2.4247392E7, 4.3473352E7, 1.5005968E7, 1.9205752E7], # benchmark
+    [326688.0, 612776.0, 281880.0, 0],   # 100coflows
+    [6915640.0, 4483152.0, 3461920.0, 0], # test_200_250 ## 2
+    [2214624.0, 4509552.0, 1952872.0, 0], # test_150_200  ## 3
+    [1.5923608E7, 1.3596456E7, 7.337872E6, 0], # test_150_250  ## 4
+    [3615440.0, 2906384.0, 2474200.0, 0], # test_200_225 ## 5
+    [1379944.0, 1785416.0, 1222736.0,1233768.0], # custom
 ]
-choice = 1
+choice = -1
 
 def stats_action(file):
     with open(file, 'r') as f:
@@ -107,7 +108,7 @@ def benchmark_analyse(benchmark_file):
         plt.ylabel("shuffle size/MB")
         
         plt.subplot(222)
-        start, end = 200, 225+1
+        start, end = 150, 250+1
         plt.scatter(range(start, end), shuffle_t[start:end])
         plt.xlabel("No")
         plt.ylabel("shuffle size/MB")
@@ -167,6 +168,21 @@ def dark_analyse():
         plt.xlabel("JOB")
         plt.ylabel("Shuffle/B")
 
+def analyse_shuffle():
+    _, _, _, shuffle = parse_benchmark()
+    _, _, _, shuffle = parse_benchmark("scripts/custom.txt")
+    import seaborn as sns 
+    sns.set()
+    plt.figure("Analyse of Coflow Size")
+    sns.scatterplot(range(len(shuffle)), np.log10(shuffle))
+    # for i, size in enumerate(np.log10(shuffle)):
+    #     print(i, "--", size)
+    fig = plt.figure()
+    fig.add_subplot(121)
+    sns.distplot(np.log10(shuffle))
+    fig.add_subplot(122)
+    sns.kdeplot(np.log10(shuffle), cumulative=True)
+
 def parse_log(file):
     """
     Parse log file to get training information.
@@ -199,10 +215,10 @@ def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
 
     if is_benchmark:
         # comp = [2.4247392E7, 4.3473352E7, 1.5005968E7]
-        comp = configuration[0]+[1.9205752E7]
+        comp = configuration[0]
     else:
         # comp = [326688.0, 612776.0, 281880.0]
-        comp = configuration[choice] + configuration[choice][-1]
+        comp = configuration[choice]
     plt.plot(x, result, 'b.-')
     plt.plot(x, [comp[0]]*len(x), "red") # DARK
     plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
@@ -417,7 +433,7 @@ def analyse_log(exp_no):
         result, ep_reward = np.array(result), np.array(ep_reward)
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
-        plot_compare(result, ep_reward, is_benchmark=True, newfigure=False)
+        plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
         # plt.figure("Exp")
         # plt.subplot(221)
         # plt.subplot(222)
@@ -441,6 +457,8 @@ if __name__ == "__main__":
     # analyse_mlfq()
 
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
+
+    # analyse_shuffle()
 
     # dark_analyse()
 
