@@ -97,7 +97,7 @@ def action_with_kde(kde, action):
     acts = [kde.get_val((a+1)/2) for a in action]
     return np.power(10, acts)
 
-def action_with_kde(kde, action):
+def action_with_softmax(kde, action):
     action = np.clip(action, 0, 1)
     action = np.array(action)/sum(action)
     act = [0]
@@ -134,7 +134,12 @@ def loop(env):
     PERIOD_SAVE_MODEL = True
     IS_OU = True
     var = 3
-    ###############################################3
+    ###############################################
+
+    print("In loop!")
+    print("agent:", agent)
+    print("EXPLORE:", EXPLORE)
+    print("IS_OU:", IS_OU)
 
     kde = KDE(prepare_pm())
     ave_rs = []
@@ -169,7 +174,7 @@ def loop(env):
             obs_n, reward, done, info = env.step(step_action)
             print("episode %s step %s"%(episode, i))
             print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
-            print("action:", action.tolist(), "step action:", step_action)
+            print("action:", action.tolist(), "step action:", step_action, "original:", action_original.tolist())
             # mlfqs.append(info["mlfq"])
             ac = [coflow[2] for coflow in eval(info["obs"].split(":")[-1])]
             sentsize.extend(ac)
@@ -186,7 +191,7 @@ def loop(env):
             if done:
                 kde.push(np.log10([e for e in sentsize if e != 0]))
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
-                print("MLFQs:", mlfqs)
+                print("episodic sentsize:", sorted(sentsize))
                 result = env.getResult()
                 print("result: ", result, type(result))
                 print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
@@ -211,7 +216,7 @@ def train_action_prob(env):
 
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPGProb(a_dim+1, s_dim, 1)
-    oun = OUNoise(a_dim, mu=0)
+    oun = OUNoise(a_dim+1, mu=0)
 
     ################ hyper parameter ##############
     agent.LR_A = 1e-4
@@ -260,7 +265,7 @@ def train_action_prob(env):
             obs_n, reward, done, info = env.step(step_action)
             print("episode %s step %s"%(episode, i))
             print("obs_next:", obs_n.reshape(-1, env.UNIT_DIM), "reward:", reward, "done:", done)
-            print("action:", action.tolist(), "step action:", step_action, "original":,action_original.tolist())
+            print("action:", action.tolist(), "step action:", step_action, "original:",action_original.tolist())
             # mlfqs.append(info["mlfq"])
             ac = [coflow[2] for coflow in eval(info["obs"].split(":")[-1])]
             sentsize.extend(ac)
@@ -416,8 +421,8 @@ if __name__ == "__main__":
     sys.stdout.flush()
 
     # main loop
-    # loop(env)
-    train_action_prob(env)
+    loop(env)
+    # train_action_prob(env)
     # train_lstm(env)
 
     destroy_env()

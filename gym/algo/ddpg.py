@@ -106,12 +106,12 @@ class DDPG(object):
             b1 = tf.get_variable("b1", [1, n_l1], trainable=trainable)
             net1 = tf.nn.relu(tf.matmul(s, w1) + b1)
             ## BN
-            net1 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(s, w1) + b1, training=True, name="BN_1"))
+            # net1 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(s, w1) + b1, training=True, name="BN_1"))
             w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
             b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
             net = tf.nn.relu(tf.matmul(net1, w2) + b2)
             ## BN
-            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
+            # net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
             a = tf.layers.dense(net, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
 
             tf.summary.histogram(scope+"/w1", w1)
@@ -129,13 +129,13 @@ class DDPG(object):
             b1 = tf.get_variable('b1', [1, n_l1], trainable=trainable)
             data = tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1
             ## BN
-            data = tf.layers.batch_normalization(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1, training=True, name="BN_1")
+            # data = tf.layers.batch_normalization(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1, training=True, name="BN_1")
             net1 = tf.nn.relu(data)
             w2 = tf.get_variable('w2', [n_l1, n_l2], trainable=trainable)
             b2 = tf.get_variable('b2', [1, n_l2], trainable=trainable)
             net = tf.nn.relu(tf.matmul(net1, w2) + b2)
             ## BN
-            net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
+            # net = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(net1, w2) + b2, training=True, name="BN_2"))
 
             tf.summary.histogram(scope+"/w1_s", w1_s)
             tf.summary.histogram(scope+"/w1_a", w1_a)
@@ -153,6 +153,9 @@ class DDPG(object):
         saver = tf.train.Saver()
         with tf.Session() as sess:
             saver.restore(self.sess, filename)
+    
+    def __str__(self):
+        return "class = %s, LR_A = %s, LR_C = %s, GAMMA = %s, TAU = %s, MEMORY_CAPACITY = %s, BATCH_SIZE = %s, a_dim = %s, s_dim = %s, a_bound = %s"%(self.__class__.__name__, self.LR_A, self.LR_C, self.GAMMA, self.TAU, self.MEMORY_CAPACITY, self.BATCH_SIZE, self.a_dim, self.s_dim, self.a_bound)
 
 class OUNoise:
     """docstring for OUNoise"""

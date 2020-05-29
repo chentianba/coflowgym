@@ -6,12 +6,14 @@ import random
 
 from algo.ddpg import DDPG, OUNoise
 from coflow import CoflowSimEnv
-from train import makeMLFQVal
-from util import chengji, get_h_m_s
+from train import makeMLFQVal, action_with_kde
+from util import chengji, get_h_m_s, KDE, prepare_pm
 
 kb, mb, gb, tb = 1024**1, 1024**2, 1024**3, 1024**4
 
 def run(env):
+    # thresholds = [1.0485760E7*(10**i) for i in range(9)]
+    thresholds = np.array([10]*9)
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
     a_bound = env.action_space.high
@@ -20,32 +22,45 @@ def run(env):
     agent = DDPG(a_dim, s_dim, a_bound)
 
     ################ hyper parameter ##############
-    agent.LR_A = 0.001
-    agent.LR_C = 0.0001
+    agent.LR_A = 1e-4
+    agent.LR_C = 1e-3
     agent.GAMMA = 0.99
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 400
-    TH = 10 # threshold MULT default is 10
+    EXPLORE = 200
+    TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
+    IS_OU = True
+    var = 3
     ###############################################
-    agent.load("models/2020-4-24-11-3-27/model_550.ckpt")
 
-    for episode in range(5):
-        obs = env.reset()
-        ep_reward = 0
+    kde = KDE(prepare_pm())
+    models = [220, 230, 240, 250, 260, 270, 280, 290]
+    random.shuffle(models)
+    print("models:", models)
 
-        for i in range(int(1e10)):
-            action = agent.choose_action(obs)
-            obs_n, reward, done, _ = env.step( makeMLFQVal(env, action) )
-            obs = obs_n
-            ep_reward += reward
-            if done:
-                print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
-                result = env.getResult()
-                print("result: ", result, type(result))
-                break
+    for model in models:
+        print("Model:", model)
+        agent.load("log/models/2020-5-21-23-42-43/model_%s.ckpt"%(model))
+
+        for episode in range(1):
+
+            obs = env.reset()
+            ep_reward = 0
+            begin = time.time()
+
+            for i in range(int(1e10)):
+                action = agent.choose_action(obs)
+                obs_n, reward, done, _ = env.step( action_with_kde(kde, action) )
+                obs = obs_n
+                ep_reward += reward
+                if done:
+                    print("episode %s: step %s, ep_reward %s, consume time: %s"%(episode, i, ep_reward, get_h_m_s(time.time()-begin)))
+                    result = env.getResult()
+                    print("result: ", result, type(result))
+                    break
+        print()
     env.close()
     print("Game is over!")
 
@@ -194,7 +209,7 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
@@ -202,7 +217,7 @@ def config_env():
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_175_200.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -219,9 +234,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    # run(env)
+    run(env)
     # run_coflowsim(env)
-    run_human(env)
+    # run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 

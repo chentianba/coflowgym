@@ -183,6 +183,22 @@ def analyse_shuffle():
     fig.add_subplot(122)
     sns.kdeplot(np.log10(shuffle), cumulative=True)
 
+def analyse_sentsize():
+    with open("log/log.txt") as f:
+        ss_l = []
+        sent = []
+        
+        line = f.readline()
+        while line:
+            if line.startswith("episodic"):
+                sentsize = eval(line.split(":")[-1])
+                ss_l.append([e for e in sentsize if e != 0])
+                sent.extend(ss_l[-1])
+            line = f.readline()
+        plt.figure()
+        import seaborn as sns 
+        sns.distplot(np.log10(sent[-1000:]))
+
 def parse_log(file):
     """
     Parse log file to get training information.
@@ -429,7 +445,7 @@ def analyse_log(exp_no):
         result, ep_reward = parse_log(("log/log.txt"))
         print("Number of samples:", len(result))
         print(len(result))
-        # print(ep_reward)
+        # print(result, ",", ep_reward)
         result, ep_reward = np.array(result), np.array(ep_reward)
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
@@ -459,6 +475,8 @@ if __name__ == "__main__":
     # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 
     # analyse_shuffle()
+
+    # analyse_sentsize()
 
     # dark_analyse()
 

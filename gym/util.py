@@ -127,7 +127,7 @@ def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
         # plt.figure("Coflow Size")
         # plt.plot(shuffle_t)
         # plt.show()
-        start, end = 0, 195
+        start, end = 400, 450
         start_time = time[start]
         for index in range(start, end):
             line = lines[index]
@@ -227,6 +227,6 @@ if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
     pass
     # print(toFactor([2,4,12,36], 2))
-    # make100coflows()
+    make100coflows()
     # makePM()
-    test()
+    # test()
