@@ -11,7 +11,21 @@ from util import chengji, get_h_m_s, KDE, prepare_pm
 
 kb, mb, gb, tb = 1024**1, 1024**2, 1024**3, 1024**4
 
-def run(env):
+args1 = {
+    "models": [220, 230, 240, 250, 260, 270, 280, 290],
+    "model_dir": "log/models/2020-5-21-23-42-43", 
+    "episode": 1,
+    "is_shuffle": True
+} ## benchmark
+
+args2 = {
+    "models": [460, 470],
+    "model_dir": "models/2020-5-30-0-6-46", 
+    "episode": 3,
+    "is_shuffle": False
+} ## custom
+
+def run(env, args):
     # thresholds = [1.0485760E7*(10**i) for i in range(9)]
     thresholds = np.array([10]*9)
     a_dim = env.action_space.shape[0]
@@ -21,30 +35,17 @@ def run(env):
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
 
-    ################ hyper parameter ##############
-    agent.LR_A = 1e-4
-    agent.LR_C = 1e-3
-    agent.GAMMA = 0.99
-    agent.TAU = 0.001
-
-    epsilon = 1
-    EXPLORE = 200
-    TH = 20 # threshold MULT default is 10
-    PERIOD_SAVE_MODEL = True
-    IS_OU = True
-    var = 3
-    ###############################################
-
     kde = KDE(prepare_pm())
-    models = [220, 230, 240, 250, 260, 270, 280, 290]
-    random.shuffle(models)
+    models = args["models"]
+    if args["is_shuffle"]:
+        random.shuffle(models)
     print("models:", models)
 
     for model in models:
         print("Model:", model)
-        agent.load("log/models/2020-5-21-23-42-43/model_%s.ckpt"%(model))
+        agent.load("%s/model_%s.ckpt"%(args["model_dir"], model))
 
-        for episode in range(1):
+        for episode in range(args["episode"]):
 
             obs = env.reset()
             ep_reward = 0
@@ -209,7 +210,7 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
@@ -217,7 +218,7 @@ def config_env():
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_175_200.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
-    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -234,7 +235,7 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    run(env)
+    run(env, args2)
     # run_coflowsim(env)
     # run_human(env)
     # sample(6)

@@ -140,6 +140,7 @@ def loop(env):
     print("agent:", agent)
     print("EXPLORE:", EXPLORE)
     print("IS_OU:", IS_OU)
+    print("directory of model: ", MODEL_DIR)
 
     kde = KDE(prepare_pm())
     ave_rs = []

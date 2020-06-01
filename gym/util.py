@@ -225,6 +225,7 @@ def test():
 
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
+    # print(cal_limit("log/tmp.txt"))
     pass
     # print(toFactor([2,4,12,36], 2))
     make100coflows()

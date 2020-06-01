@@ -1,0 +1,31 @@
+{
+    "coflowsim_args": {
+        "scheduling": "dark",
+        "data_file": "./scripts/custom.txt"
+    },
+    "train": {
+        "normal": {
+            "noise": {
+                "is_ou": true, 
+                "ou": {
+                    "mu": 0
+                },
+                "gauss": {
+                    "var": 3
+                }
+            },
+            "ddpg": {
+                "lr_a": 0.0001,
+                "lr_c": 0.001,
+                "gamma": 0.99,
+                "tau": 0.001
+            },
+            "explore": 200,
+            "period_save_model": true,
+            "max_episode": 1000,
+            "max_step": 10000
+        }
+    },
+    "analyse": {
+    }
+}
