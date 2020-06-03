@@ -450,6 +450,9 @@ def analyse_log(exp_no):
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
         plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
+        plt.figure()
+        plt.plot(ep_reward)
+
         # plt.figure("Exp")
         # plt.subplot(221)
         # plt.subplot(222)

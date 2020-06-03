@@ -216,18 +216,14 @@ class KDE():
         print("In KDE:", self.kde.pdf(x))
 
 def test():
-    action = [0.1, 0.2, 0.3, 0.4]
-    a = [0]
-    for e in action:
-        a.append(a[-1]+e)
-    del a[0]
-    print(a)
+    kde = KDE([0, 1])
+    kde.print()
 
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
     # print(cal_limit("log/tmp.txt"))
     pass
     # print(toFactor([2,4,12,36], 2))
-    make100coflows()
+    # make100coflows()
     # makePM()
-    # test()
+    test()

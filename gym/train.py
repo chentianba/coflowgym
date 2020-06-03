@@ -129,7 +129,7 @@ def loop(env):
     agent.TAU = 0.001
 
     epsilon = 1
-    EXPLORE = 200
+    EXPLORE = 70 # ep 320 (threshold is 0.01), 480(0.001)
     TH = 20 # threshold MULT default is 10
     PERIOD_SAVE_MODEL = True
     IS_OU = True
@@ -142,7 +142,8 @@ def loop(env):
     print("IS_OU:", IS_OU)
     print("directory of model: ", MODEL_DIR)
 
-    kde = KDE(prepare_pm())
+    kde = KDE(prepare_pm())    
+    # kde = KDE([0, 1])
     ave_rs = []
 
     begin_time = time.time()
@@ -183,7 +184,7 @@ def loop(env):
 
             agent.store_transition(obs, action, reward, obs_n)
 
-            if agent.pointer > agent.BATCH_SIZE:
+            if agent.pointer > 5000:
                 agent.learn()
                 var *= 0.9995
             
@@ -194,7 +195,11 @@ def loop(env):
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 print("episodic sentsize:", sorted(sentsize))
                 result = env.getResult()
-                print("result: ", result, type(result))
+                print("result: ", result)
+                if IS_OU:
+                    print("epsilon:", epsilon)
+                else:
+                    print("var:", var)
                 print("time: total-%s, episode-%s"%(get_h_m_s(time.time()-begin_time), get_h_m_s(time.time()-ep_time)))
                 sys.stdout.flush()
                 break
