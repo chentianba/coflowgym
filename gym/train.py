@@ -146,7 +146,7 @@ def loop(env):
     print("directory of model: ", MODEL_DIR)
 
     kde = KDE(prepare_pm())    
-    # kde = KDE([0, 1])
+    kde = KDE(list(range(15)))
     ave_rs = []
 
     begin_time = time.time()
@@ -188,17 +188,22 @@ def loop(env):
 
             agent.store_transition(obs, action, reward, obs_n)
 
-            if agent.pointer > 5000:
+            start_learning = agent.pointer > agent.BATCH_SIZE
+            if start_learning:
                 agent.learn()
                 var *= 0.9995
             
             obs = obs_n
             ep_reward += reward
             if done:
-                kde.push(np.log10([e for e in sentsize if e != 0]))
-                print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
+                if start_learning:
+                    kde.push(np.log10([e for e in sentsize if e != 0]))
+
+                ## print stats
+                result, cf_info = env.getResult()
                 print("episodic sentsize:", sorted(sentsize))
-                result = env.getResult()
+                print("cf_info:", cf_info)
+                print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 print("result: ", result)
                 if IS_OU:
                     print("epsilon:", epsilon)

@@ -64,7 +64,7 @@ public class CoflowGym {
      *      return the sum of every job duration in Benchmark
      */
     public String printStats() {
-        return this.simulator.printStats(false);
+        return this.simulator.printStats(true);
         // System.out.println(this.simulator instanceof CoflowSimulatorDark);
     }
 

@@ -198,7 +198,11 @@ class CoflowSimEnv(Env):
         return np.array(state)
 
     def getResult(self):
-        return self.coflowsim.printStats()
+        stats = str(self.coflowsim.printStats())
+        lines = stats.split("\n")
+        result = eval(lines[-1])
+        cf_info = lines[:-1]
+        return result, cf_info
     
     def reset(self):
         self.__initialize()

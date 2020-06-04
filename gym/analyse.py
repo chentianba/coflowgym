@@ -362,6 +362,35 @@ def analyse_samples(file="log/sample_1.txt"):
         #     print(toFactor(act, 1024), res)
         print("Minimum Result:", min(results))
 
+def plot_smoothing(x, y, fig):
+    from util import smooth_value
+    import pandas as pd
+    y_s = smooth_value(y, 0.9)
+    data = pd.DataFrame({
+        "x": list(range(len(y))),
+        "y": y,
+        "y_s": y_s
+    })
+    # print(data)
+
+    # import seaborn as sns; sns.set()
+    # sns.lineplot(x="x", y="y", data=data, ci=0.5)
+    # sns.lineplot(x="x", y="y_s", data=data)
+
+    plt.figure(fig)
+    color = "royalblue"
+    plt.plot(x, y, linestyle="-", color=color, alpha=0.35)
+    plt.plot(x, y_s, linestyle="-", color=color)
+    # plt.show()
+
+def add_compare(is_benchmark=True):
+    x = plt.xlim()
+    comp = configuration[0] if is_benchmark else configuration[choice]
+    plt.plot(x, [comp[0]]*len(x), "red") # DARK
+    plt.plot(x, [comp[1]]*len(x), "cyan") # FIFO
+    plt.plot(x, [comp[2]]*len(x), "lawngreen") # SEBF
+    plt.plot(x, [comp[3]]*len(x), "sandybrown") # Target
+
 def analyse_log(exp_no):
 
     if exp_no == 1:
@@ -442,7 +471,7 @@ def analyse_log(exp_no):
 
     ## 
     if exp_no < 0:
-        result, ep_reward = parse_log(("log/log.txt"))
+        result, ep_reward = parse_log(("log/log_10.txt"))
         print("Number of samples:", len(result))
         print(len(result))
         # print(result, ",", ep_reward)
@@ -450,8 +479,11 @@ def analyse_log(exp_no):
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
         plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
-        plt.figure()
-        plt.plot(ep_reward)
+
+        plot_smoothing(range(len(result)), result, "result")
+        add_compare(is_benchmark=False)
+
+        plot_smoothing(range(len(ep_reward)), ep_reward, "ep_reward")
 
         # plt.figure("Exp")
         # plt.subplot(221)
