@@ -200,7 +200,7 @@ class CoflowSimEnv(Env):
     def getResult(self):
         stats = str(self.coflowsim.printStats())
         lines = stats.split("\n")
-        result = eval(lines[-1])
+        result = eval(lines[-1]) # unit is milli second(ms)
         cf_info = lines[:-1]
         return result, cf_info
     

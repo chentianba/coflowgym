@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt 
 import numpy as np 
 import benchdata
+import util
 
 ### TODO: Benchmark CDF
 def plot_CDF():
@@ -25,11 +26,13 @@ def compare_CCT():
     fair = [bmk_ave["fairness"]/best_ave, bmk_ave["fairness"]/best_ave]
     aalo = [bmk_ave["aalo"]/best_ave, bmk_ave["aalo"]/best_ave]
 
+    import seaborn as sns    
+    sns.set_style("darkgrid", {'axes.grid' : False})
     plt.figure("Comparision CCT")
     plt.rc("font", family="Times New Roman")
-    plt.bar(x, varys, label="Varys", width=width, color="red")
-    plt.bar(x+width, fair, label="Per-Flow Fairness", width=width, color="blue")
-    plt.bar(x+width*2, aalo, label="Aalo", width=width, color="green")
+    plt.bar(x, varys, label="Varys", width=width)
+    plt.bar(x+width, fair, label="Per-Flow Fairness", width=width)
+    plt.bar(x+width*2, aalo, label="Aalo", width=width)
 
     plt.plot(plt.xlim(), [1]*2, "black")
 
@@ -45,11 +48,31 @@ def compare_CCT():
 
 
 ### TODO：训练效果
+def get_train_result():
+    from analyse import parse_log
+    result, _ = parse_log(("log/log_10.txt"))
+    start, end = 1, 450
+    
+    x = range(start, end+1)
+    data = np.array(result[:end])/1024/100
+    import seaborn as sns; sns.set()
+    sns.set_style('whitegrid')
+    plt.figure("Training")
+    plt.rc("font", family="Times New Roman")
+    data_sm = util.smooth_value(data, smoothing=0.9)
+    plt.plot(x, data_sm, "-")
+    plt.plot(x, data, "-", alpha=0.35, color="g")
+
+    plt.legend(["DRL"])
+    plt.ylabel("Average CCT(seconds)", fontsize=12)
+    plt.xlabel("training episodes", fontsize=12)
 
 
 if __name__ == "__main__":
     pass
 
     compare_CCT()
+
+    get_train_result()
 
     plt.show()
