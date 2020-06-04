@@ -12,6 +12,8 @@ if not os.path.exists("./models"):
     os.mkdir("./models")
 MODEL_DIR = "./models/"+get_now_time()
 
+LOG_FILE = "log/log_10.txt"
+
 def makeMLFQVal(env, thresholds):
     NUM_MLFQ = env.ACTION_DIM
     assert NUM_MLFQ == len(thresholds), "length of thresholds doesnot Match!"
@@ -137,6 +139,7 @@ def loop(env):
     ###############################################
 
     print("In loop!")
+    print("log file:", LOG_FILE)
     print("agent:", agent)
     print("EXPLORE:", EXPLORE)
     print("IS_OU:", IS_OU)
@@ -166,7 +169,8 @@ def loop(env):
             # action_original = np.array(thresholds)
             # action_original = (np.random.rand(a_dim))*2-1
             if IS_OU:
-                action = action_original + max(0.01, epsilon)*oun.noise()
+                # action = action_original + max(0.01, epsilon)*oun.noise()
+                action = action_original + epsilon*oun.noise()
             else:
                 action = np.clip(np.random.normal(action_original, var), -1, 1)
 
@@ -417,7 +421,7 @@ def destroy_env():
 if __name__ == "__main__":
     if not os.path.exists("./log/"):
         os.mkdir("./log/")
-    file = open("log/log.txt", "w")
+    file = open(LOG_FILE, "w")
     sys.stdout = file
 
     env = config_env()

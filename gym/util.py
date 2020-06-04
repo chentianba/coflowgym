@@ -215,6 +215,15 @@ class KDE():
         x = np.arange(0, 15)
         print("In KDE:", self.kde.pdf(x))
 
+def smooth_value(x, smoothing=0.9):
+    last = x[0]
+    smoothed = []
+    for point in x:
+        val = last*smoothing + point*(1-smoothing)
+        smoothed.append(val)
+        last = val
+    return smoothed
+
 def test():
     kde = KDE([0, 1])
     kde.print()
