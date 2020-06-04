@@ -5,7 +5,17 @@ import util
 
 ### TODO: Benchmark CDF
 def plot_CDF():
-    pass
+    import seaborn as sns; sns.set()
+
+    _, _, _, shuffle_t = util.parse_benchmark()
+    plt.figure("CDF")
+    plt.rc("font", family="Times New Roman")
+    shuffle_p = np.log10(shuffle_t)
+    
+    sns.kdeplot(shuffle_p, cumulative=True, label="Benchmark")
+
+    plt.xlabel("Coflow Size", fontsize=12)
+    plt.legend(fontsize=12)
 
 
 ### TODO: CCT指标对比（平均和95th）
@@ -71,8 +81,10 @@ def get_train_result():
 if __name__ == "__main__":
     pass
 
-    compare_CCT()
+    plot_CDF()
 
-    get_train_result()
+    # compare_CCT()
+
+    # get_train_result()
 
     plt.show()

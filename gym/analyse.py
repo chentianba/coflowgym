@@ -124,15 +124,6 @@ def benchmark_analyse(benchmark_file):
         plt.xlabel("No")
         plt.ylabel("width")
 
-        plt.figure("test_%s_%s"%(start, end-1))
-        test_sf = shuffle_t[start:end]
-        test_cdf = np.array(toCDF(test_sf))
-        print("test_%s_%s coflows Percentile(MB):"%(start, end-1), toPercentile(test_cdf, num=10))
-        print("Benchmark Percentile(MB):", toPercentile(toCDF(shuffle_t), num=10))
-        plt.plot(test_cdf[:,0], test_cdf[:,1])
-        plt.xlabel("shuffle size/MB")
-        plt.ylabel("probability")
-
         plt.figure("sentsize analyse")
         import scipy.stats as st
         import seaborn as sns 
@@ -141,6 +132,10 @@ def benchmark_analyse(benchmark_file):
         sns.distplot(sent_s, fit=st.norm, fit_kws={"color":"r", "label":"norm"}, kde_kws={"label":"KDE"})
         sns.utils.axlabel("sentsize(log10)", "")
         sns.utils.plt.legend()
+
+        # sns.set_style("whitegrid")
+        
+
 
 def dark_analyse():
     with open("doc/dark.txt", "r") as f:
@@ -501,13 +496,13 @@ def analyse_log(exp_no):
 
 if __name__ == "__main__":
     
-    analyse_log(-6)
+    # analyse_log(-6)
 
     # stats_action("log/log.txt")
     
     # analyse_mlfq()
 
-    # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
+    benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 
     # analyse_shuffle()
 
