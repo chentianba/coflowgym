@@ -100,19 +100,21 @@ def benchmark_analyse(benchmark_file):
         # print(mappers)
         # print(reducers)
         shuffle_t = np.array(shuffle_t)
+        shuffle_log = np.log10(shuffle_t)
         plt.figure("benchmark_analyse")
 
         plt.subplot(221)
-        plt.scatter(range(1, 1+len(shuffle_t)), shuffle_t)
+        plt.scatter(range(1, 1+len(shuffle_t)), shuffle_log, marker=".")
         plt.xlabel("No")
-        plt.ylabel("shuffle size/MB")
+        plt.ylabel("log of shuffle size/MB")
+        plt.grid()
         
         plt.subplot(222)
-        start, end = 150, 250+1
-        plt.scatter(range(start, end), shuffle_t[start:end])
-        plt.xlabel("No")
-        plt.ylabel("shuffle size/MB")
-        # print("shuffle_t(%s, %s):%s"%(start, end-1, shuffle_t[start:end]))
+        cdf = toCDF(shuffle_log)
+        plt.plot(cdf[:, 0], cdf[:, 1])
+        plt.xlabel("log of shuffle size/MB")
+        plt.ylabel("CDF")
+        plt.grid()
 
         plt.subplot(223)
         plt.plot(time, shuffle_t)

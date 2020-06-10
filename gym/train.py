@@ -12,7 +12,8 @@ if not os.path.exists("./models"):
     os.mkdir("./models")
 MODEL_DIR = "./models/"+get_now_time()
 
-LOG_FILE = "log/log_10.txt"
+# LOG_FILE = "log/log_10.txt"
+LOG_FILE = "log/tmp.txt"
 
 def makeMLFQVal(env, thresholds):
     NUM_MLFQ = env.ACTION_DIM
@@ -409,12 +410,13 @@ def config_env():
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_250.txt"] # 6915640.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0    
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)

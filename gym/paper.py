@@ -50,7 +50,7 @@ def compare_CCT():
     plt.xticks([0.5, 1.5], ["Avg", "95th"], fontsize=14)
     plt.yticks([0.5, 1, 1.5,2, 2.5], None, fontsize=14)
     plt.legend(loc="upper center", fontsize=12)
-    plt.ylabel("Normalized Comp.Time\nw.r.t.DRL", fontsize=14)
+    plt.ylabel("Normalized Comp.Time\nw.r.t.M-DRL", fontsize=14)
     plt.xlabel("Coflow Metric", fontsize=14)
 
 

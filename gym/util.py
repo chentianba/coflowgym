@@ -140,6 +140,49 @@ def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
             f.write(line)
             f.write("\n")
 
+def makeLightTail():
+    benchmark_file = "scripts/FB2010-1Hr-150-0.txt"
+    time = []
+    shuffle_t = []
+    lines = []
+    target = []
+    with open(benchmark_file, "r") as f:
+        line = f.readline()
+        num_machines, num_jobs = (eval(word) for word in line.split())
+        for _ in range(num_jobs):
+            line = f.readline()
+            lines.append(line)
+
+            words = line.split()
+            time.append(eval(words[1]))
+
+            m = eval(words[2])
+            total = 0 ## unit is MB
+            for reduce in words[4+m:]:
+                total += eval(reduce.split(":")[-1])
+            shuffle_t.append(total)
+        
+        data = np.log10(shuffle_t)
+        data = np.power(10, data[data >= 3])
+        print("Number of target: ", len(data))
+        for index, line in enumerate(lines[:]):
+            rate = np.random.choice(data)/shuffle_t[index]
+            # print("rate:", rate)
+            words = line.split()
+            num_mapper = eval(words[2])
+            num_reducer = eval(words[3+num_mapper])
+            for i in range(num_mapper+4, num_mapper+4+num_reducer):
+                r_id, size = words[i].split(":")
+                size = int(eval(size)*rate)
+                words[i] = r_id+":"+str(size)
+            target.append(" ".join(words))
+
+    with open("scripts/light_tail.txt", "w") as f:
+        f.write("%s %s\n"%(num_machines,num_jobs))
+        for line in target:
+            f.write(line)
+            f.write("\n")
+
 def prepare_pm():
     with open("doc/benchmark_sentsize.txt") as f:
         line = f.readline()
@@ -235,4 +278,5 @@ if __name__ == "__main__":
     # print(toFactor([2,4,12,36], 2))
     # make100coflows()
     # makePM()
-    test()
+    # test()
+    makeLightTail()
