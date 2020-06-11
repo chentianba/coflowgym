@@ -146,10 +146,10 @@ def instruction(coflows):
     c_set = set(coflows)
     c_set = sorted(c_set)
     n = len(c_set)
-    N = 7
+    N = 10
     threshold = []
     if n <= 1:
-        return [(10**i)*10*mb for i in range(6)]
+        return [(10**i)*10*mb for i in range(N-1)]
     if n <= N:
         for i in range(1, n):
             threshold.append((c_set[i]+c_set[i-1])/2)
@@ -195,7 +195,7 @@ def run_human(env):
             ep_reward += reward
             if done:
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
-                result = env.getResult()
+                result, _ = env.getResult()
                 print("result: ", result, type(result))
                 print("coflow set:", acs)
                 break
@@ -211,6 +211,7 @@ def config_env():
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
@@ -218,7 +219,7 @@ def config_env():
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_175_200.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -235,9 +236,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    run(env, args2)
+    # run(env, args2)
     # run_coflowsim(env)
-    # run_human(env)
+    run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 
