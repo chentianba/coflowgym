@@ -146,7 +146,7 @@ def loop(env):
     print("IS_OU:", IS_OU)
     print("directory of model: ", MODEL_DIR)
 
-    kde = KDE(prepare_pm())    
+    # kde = KDE(prepare_pm())    
     kde = KDE(list(range(15)))
     ave_rs = []
 

@@ -136,11 +136,9 @@ def benchmark_analyse(benchmark_file):
         sns.utils.plt.legend()
 
         # sns.set_style("whitegrid")
-        
 
-
-def dark_analyse():
-    with open("doc/dark.txt", "r") as f:
+def dark_analyse(file="doc/dark.txt", isplot=True):
+    with open(file, "r") as f:
         durations = []
         shuffle_t = []
 
@@ -160,10 +158,12 @@ def dark_analyse():
 
             line = f.readline()
         ##
-        plt.figure()
-        plt.plot(shuffle_t)
-        plt.xlabel("JOB")
-        plt.ylabel("Shuffle/B")
+        if isplot:
+            plt.figure()
+            plt.plot(shuffle_t)
+            plt.xlabel("JOB")
+            plt.ylabel("Shuffle/B")
+        return np.array(durations)
 
 def analyse_shuffle():
     _, _, _, shuffle = parse_benchmark()
@@ -220,6 +220,37 @@ def parse_log(file):
                 # print(rs)
                 ep_reward.append(rs)
         return result, ep_reward
+
+def parse_complete_log(file="log/log.txt"):
+    """
+    return a dict, including {"result":[], "ep_reward":[], "coflows":[[],[],...]}
+    """
+    with open(file, 'r') as f:
+        result = []
+        ep_reward = []
+        coflows = []
+
+        line = f.readline()
+        while line:
+            if line.startswith("result:"):
+                res = eval(line.split()[1])
+                # print(res)
+                result.append(res)
+
+            line = f.readline()
+            if line.find("ep_reward") != -1:
+                rs = eval(line.split()[-1])
+                # print(rs)
+                ep_reward.append(rs)
+            if line.startswith("cf_info:"):
+                jobs = eval(line.split(":")[-1])
+                coflows_t = []
+                for job in jobs:
+                    words = job.split()
+                    duration = eval(words[-3])
+                    coflows_t.append(duration)
+                coflows.append(coflows_t)
+        return {"result":result, "ep_reward":ep_reward, "coflows":coflows}
 
 def plot_compare(result, ep_reward, newfigure=True, is_benchmark=True):
     if newfigure:
@@ -468,17 +499,18 @@ def analyse_log(exp_no):
 
     ## 
     if exp_no < 0:
-        result, ep_reward = parse_log(("log/log_10.txt"))
+        result, ep_reward = parse_log(("doc/log/success-2/log/log_10.txt"))
         print("Number of samples:", len(result))
         print(len(result))
         # print(result, ",", ep_reward)
         result, ep_reward = np.array(result), np.array(ep_reward)
+        is_benchmark = True
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
-        plot_compare(result, ep_reward, is_benchmark=False, newfigure=False)
+        plot_compare(result, ep_reward, is_benchmark=is_benchmark, newfigure=False)
 
         plot_smoothing(range(len(result)), result, "result")
-        add_compare(is_benchmark=False)
+        add_compare(is_benchmark=is_benchmark)
 
         plot_smoothing(range(len(ep_reward)), ep_reward, "ep_reward")
 
@@ -498,13 +530,13 @@ def analyse_log(exp_no):
 
 if __name__ == "__main__":
     
-    # analyse_log(-6)
+    analyse_log(-6)
 
     # stats_action("log/log.txt")
     
     # analyse_mlfq()
 
-    benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
+    # benchmark_analyse("scripts/FB2010-1Hr-150-0.txt")
 
     # analyse_shuffle()
 

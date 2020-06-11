@@ -4,14 +4,14 @@
 
 | Unit | Inter-coflow | Clairvoyant | Time |
 | -- | -- | -- | -- |
-| flow | FAIR |  | 3.7131824E7 |
+| flow | FAIR |  | 3.7131824E7(68.94s) |
 | flow | PFP| | 5.2216912E7 |
-| coflow | FIFO| Yes | 4.3473352E7 |
+| coflow | FIFO| Yes | 4.3473352E7(80.71s) |
 | coflow | SCF(SJF) | Yes | 1.5578368E7 |
 | coflow | NCF(NJF) | Yes | 2.1937472E7 |
 | coflow | LCF(LJF) | Yes | 1.61236E7 |
-| coflow | SEBF | Yes | 1.5005968E7 |
-| | DARK | No | 2.4247392E7 |
+| coflow | SEBF | Yes | 1.5005968E7(27.86s) |
+| | DARK | No | 2.4247392E7(45.02s) |
 
 ## test100
 使用前100个coflow做简便的计算
@@ -33,6 +33,8 @@
 | test_100_200 | 2326424.0 | 4722752.0 |  | 2527824.0 |  |
 | test_200_526 | 1.1958056E7 | 3.9672224E7 | | 1.1830344E7 | |
 | test_0_250 | 1.7325104E7 | 1.4348224E7 | | 1.4410984E7 | |
+| light_tail(100) | 3.73975776E8 | 5.20843856E8 | 2.44592544E8 | 3.43305064E8 | fair: |
+| light_tail(526) | | | | | |
 
 
 ## 实验机器性能评估

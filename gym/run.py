@@ -25,9 +25,14 @@ args2 = {
     "is_shuffle": False
 } ## custom
 
+args3 = {
+    "models": list(range(50, 400, 10)),
+    "model_dir": "doc/log/success-2/models/2020-6-4-20-11-22", 
+    "episode": 3,
+    "is_shuffle": False
+} ## benchmark
+
 def run(env, args):
-    # thresholds = [1.0485760E7*(10**i) for i in range(9)]
-    thresholds = np.array([10]*9)
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
     a_bound = env.action_space.high
@@ -35,7 +40,8 @@ def run(env, args):
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
 
-    kde = KDE(prepare_pm())
+    # kde = KDE(prepare_pm())
+    kde = KDE(list(range(15)))
     models = args["models"]
     if args["is_shuffle"]:
         random.shuffle(models)
@@ -210,8 +216,8 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
+    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0
@@ -236,9 +242,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    # run(env, args2)
+    run(env, args3)
     # run_coflowsim(env)
-    run_human(env)
+    # run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 
