@@ -41,7 +41,7 @@ def plot_CDF():
     plt.plot(x2, y2, alpha=0.9)
 
     plt.ylim([0, 1])
-    plt.yticks([0.5, 1], [0.5, 1])
+    plt.yticks([0, 0.5, 1], [0, 0.5, 1])
     plt.xlim([0, 7])
     plt.xticks(range(1,8), [r'10$^{%s}$'%(i) for i in range(1, 8)])
     # plt.text(2, 0, )
@@ -72,7 +72,7 @@ def compare_CCT():
     aalo = [bmk_ave["aalo"]/best_ave, bmk_ave["aalo"]/best_ave]
 
     import seaborn as sns    
-    sns.set_style("darkgrid", {'axes.grid' : False})
+    sns.set_style("whitegrid", {'axes.grid' : False})
     plt.figure("Comparision CCT")
     plt.rc("font", family="Times New Roman")
     plt.bar(x, varys, label="Varys", width=width)
@@ -134,12 +134,16 @@ def get_train_result():
     plt.figure("Training")
     plt.rc("font", family="Times New Roman")
     data_sm = util.smooth_value(data, smoothing=0.9)
-    plt.plot(x, data_sm, "-")
-    plt.plot(x, data, "-", alpha=0.35, color="g")
+    plt.plot(x, data_sm, "-", color="b")
+    plt.plot(x, data, "-", alpha=0.35, color="b")
 
     plt.legend(["DRL"])
+    plt.grid(linestyle="-.")
     plt.ylabel("Average CCT(seconds)", fontsize=12)
     plt.xlabel("training episodes", fontsize=12)
+    plt.ylim([30, 90])
+    plt.xlim([0, end])
+    plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)))
 
     plt.savefig("doc/paper/Training.png")
 
