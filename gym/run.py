@@ -32,6 +32,13 @@ args3 = {
     "is_shuffle": False
 } ## benchmark
 
+args4 = {
+    "models": [260],
+    "model_dir": "doc/log/success-2/models/2020-6-4-20-11-22", 
+    "episode": 10,
+    "is_shuffle": False
+} ## benchmark
+
 def run(env, args):
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
@@ -40,8 +47,7 @@ def run(env, args):
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
 
-    # kde = KDE(prepare_pm())
-    kde = KDE(list(range(15)))
+    kde = KDE(prepare_pm())
     models = args["models"]
     if args["is_shuffle"]:
         random.shuffle(models)
@@ -50,24 +56,31 @@ def run(env, args):
     for model in models:
         print("Model:", model)
         agent.load("%s/model_%s.ckpt"%(args["model_dir"], model))
+        sys.stdout.flush()
 
         for episode in range(args["episode"]):
 
             obs = env.reset()
             ep_reward = 0
+            sentsize = []
             begin = time.time()
+            kde.update()
 
             for i in range(int(1e10)):
                 action = agent.choose_action(obs)
-                obs_n, reward, done, _ = env.step( action_with_kde(kde, action) )
+                obs_n, reward, done, info = env.step( action_with_kde(kde, action) )
                 obs = obs_n
+                sentsize.extend([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
                 ep_reward += reward
                 if done:
+                    kde.push(np.log10([e for e in sentsize if e != 0]))
                     print("episode %s: step %s, ep_reward %s, consume time: %s"%(episode, i, ep_reward, get_h_m_s(time.time()-begin)))
                     result = env.getResult()
-                    print("result: ", result, type(result))
+                    print("result: ", result[0], type(result))
+                    print("coflows:", result[-1])
                     break
         print()
+        sys.stdout.flush()
     env.close()
     print("Game is over!")
 
@@ -242,7 +255,7 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    run(env, args3)
+    run(env, args4)
     # run_coflowsim(env)
     # run_human(env)
     # sample(6)

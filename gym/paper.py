@@ -24,6 +24,12 @@ def calculate_95th():
     print(sebf, dark, fair)
     return {"sebf": sebf, "aalo":dark, "fairness":fair}
 
+def get_facebook_drl_data():
+    best_ep = 260
+    result, ep_r, coflows = benchdata.success_2_data()
+    print(coflows)
+    return result, ep_r, None
+
 ### TODO: Benchmark CDF
 def plot_CDF():
     _, _, _, shuffle_t = util.parse_benchmark()
@@ -124,20 +130,21 @@ def compare_CDFofCCT():
 ### TODO：训练效果
 def get_train_result():
     from analyse import parse_log
-    result, _ = parse_log(("doc/log/success-2/log/log_10.txt"))
+    result, ep_r = parse_log(("doc/log/success-2/log/log_10.txt"))
     start, end = 1, 380
     
     x = range(start, end+1)
     data = np.array(result[:end])/1024/526
+    data_sm = util.smooth_value(data, smoothing=0.9)
+
     import seaborn as sns; sns.set()
     sns.set_style('whitegrid')
     plt.figure("Training")
     plt.rc("font", family="Times New Roman")
-    data_sm = util.smooth_value(data, smoothing=0.9)
     plt.plot(x, data_sm, "-", color="b")
     plt.plot(x, data, "-", alpha=0.35, color="b")
 
-    plt.legend(["DRL"])
+    plt.legend(["Facebook"])
     plt.grid(linestyle="-.")
     plt.ylabel("Average CCT(seconds)", fontsize=12)
     plt.xlabel("training episodes", fontsize=12)
@@ -146,18 +153,37 @@ def get_train_result():
     plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)))
 
     plt.savefig("doc/paper/Training.png")
+    # ******************************************************************* #
+    rs = np.array(ep_r[:end])
+    normalize_rs = (rs - min(rs))/(max(rs) - min(rs))
+    rs_sm = util.smooth_value(normalize_rs, smoothing=0.9)
+
+    plt.figure("ep_reward")
+    plt.rc("font", family="Times New Roman")
+    plt.plot(x, rs_sm, "-", color="b")
+    plt.plot(x, normalize_rs, "-", alpha=0.35, color="b")
+
+    plt.legend(["Facebook"])
+    plt.grid(linestyle="-.")
+    plt.ylabel("Normalized Reward", fontsize=12)
+    plt.xlabel("training episodes", fontsize=12)
+    # plt.ylim([30, 90])
+    plt.xlim([0, end])
+    plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)))
+
+    plt.savefig("doc/paper/ep_reward.png")
 
 
 if __name__ == "__main__":
     pass
 
-    plot_CDF()
+    # plot_CDF()
 
     # calculate_95th()
 
-    compare_CDFofCCT()
+    # compare_CDFofCCT()
 
-    compare_CCT()
+    # compare_CCT()
 
     get_train_result()
 
