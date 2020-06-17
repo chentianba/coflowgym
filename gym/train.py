@@ -146,8 +146,8 @@ def loop(env):
     print("IS_OU:", IS_OU)
     print("directory of model: ", MODEL_DIR)
 
-    # kde = KDE(prepare_pm())    
-    kde = KDE(list(range(15)))
+    # kde = KDE(prepare_pm()*100)
+    kde = KDE(list(range(15))*667)
     ave_rs = []
 
     begin_time = time.time()

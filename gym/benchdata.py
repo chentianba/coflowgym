@@ -12,5 +12,7 @@ def success_2_data():
     import json
     with open("doc/log/success-2/data.json", "r") as f:
         data = json.load(f)
-        print(type(data))
         return data["result"], data["ep_reward"]
+
+
+

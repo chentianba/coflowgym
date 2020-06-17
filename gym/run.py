@@ -1,7 +1,7 @@
 import sys, time, os
 from jpype import *
 import numpy as np
-import json, math
+import json, math, pprint
 import random
 
 from algo.ddpg import DDPG, OUNoise
@@ -12,6 +12,7 @@ from util import chengji, get_h_m_s, KDE, prepare_pm
 kb, mb, gb, tb = 1024**1, 1024**2, 1024**3, 1024**4
 
 args1 = {
+    "data": "./scripts/FB2010-1Hr-150-0.txt",
     "models": [220, 230, 240, 250, 260, 270, 280, 290],
     "model_dir": "log/models/2020-5-21-23-42-43", 
     "episode": 1,
@@ -19,6 +20,7 @@ args1 = {
 } ## benchmark
 
 args2 = {
+    "data": "./scripts/custom.txt",
     "models": [460, 470],
     "model_dir": "models/2020-5-30-0-6-46", 
     "episode": 3,
@@ -26,18 +28,28 @@ args2 = {
 } ## custom
 
 args3 = {
+    "data": "./scripts/FB2010-1Hr-150-0.txt",
     "models": list(range(50, 400, 10)),
     "model_dir": "doc/log/success-2/models/2020-6-4-20-11-22", 
     "episode": 3,
-    "is_shuffle": False
-} ## benchmark
+    "is_shuffle": True,
+    "detailed": False
+} ## benchmark: 对success-2中50-390范围内的model进行测试
 
 args4 = {
-    "models": [260],
+    "data": "./scripts/FB2010-1Hr-150-0.txt",
+    "models": [110], # 270
     "model_dir": "doc/log/success-2/models/2020-6-4-20-11-22", 
-    "episode": 10,
-    "is_shuffle": False
-} ## benchmark
+    "episode": 50,
+    "is_shuffle": False,
+    "detailed": True
+} ## benchmark: 对success-2中最好的model测试
+
+args5 = {
+    "data": "./scripts/light_tail.txt"
+} ## light tail: Test the target of Active Coflows
+
+choice = args5
 
 def run(env, args):
     a_dim = env.action_space.shape[0]
@@ -47,6 +59,8 @@ def run(env, args):
     print("a_dim:", a_dim, "s_dim:", s_dim, "a_bound:", a_bound)
     agent = DDPG(a_dim, s_dim, a_bound)
 
+    print("args:")
+    pprint.pprint(args)
     kde = KDE(prepare_pm())
     models = args["models"]
     if args["is_shuffle"]:
@@ -63,21 +77,30 @@ def run(env, args):
             obs = env.reset()
             ep_reward = 0
             sentsize = []
+            actions = []
             begin = time.time()
             kde.update()
 
             for i in range(int(1e10)):
                 action = agent.choose_action(obs)
-                obs_n, reward, done, info = env.step( action_with_kde(kde, action) )
+                step_action = action_with_kde(kde, action)
+                actions.append(list(step_action))
+                obs_n, reward, done, info = env.step(step_action)
                 obs = obs_n
-                sentsize.extend([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
+                ac = [coflow[2] for coflow in eval(info["obs"].split(":")[-1])]
+                sentsize.extend(ac)
+                if args["detailed"]:
+                    print("step: %s, action: %s, sentsize: %s"%(i,list(step_action),ac))
                 ep_reward += reward
                 if done:
                     kde.push(np.log10([e for e in sentsize if e != 0]))
                     print("episode %s: step %s, ep_reward %s, consume time: %s"%(episode, i, ep_reward, get_h_m_s(time.time()-begin)))
                     result = env.getResult()
                     print("result: ", result[0], type(result))
-                    print("coflows:", result[-1])
+                    if args["detailed"]:
+                        print("coflows:", result[-1])
+                        print("sentsize: ", sentsize)
+                        print("Actions:", actions)
                     break
         print()
         sys.stdout.flush()
@@ -209,7 +232,6 @@ def run_human(env):
             # print(info)
             ac = sorted([coflow[2] for coflow in eval(info["obs"].split(":")[-1])])
             acs.append(ac)
-            # print("active coflows in step",i,":", np.array(acs[-1]))
             obs = obs_n
             ep_reward += reward
             if done:
@@ -229,7 +251,7 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
@@ -239,6 +261,7 @@ def config_env():
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_200_225.txt"] # 3615440.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/custom.txt"] # 
+    args = ["dark", "COFLOW-BENCHMARK", choice["data"]]
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
     return CoflowSimEnv(gym, False)
@@ -255,9 +278,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    run(env, args4)
+    # run(env, choice)
     # run_coflowsim(env)
-    # run_human(env)
+    run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 

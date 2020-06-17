@@ -36,6 +36,15 @@ def get_now_time():
     now = datetime.now()
     return "%s-%s-%s-%s-%s-%s"%(now.year, now.month, now.day, now.hour, now.minute, now.second)
 
+def get_ellipse(e_x, e_y, a, b, e_angle):
+    theta = np.arange(0, 2 * np.pi, 0.01)
+    x = a*np.cos(theta)
+    y = b*np.sin(theta)
+    angle = e_angle/180*np.pi
+    nx = x*np.cos(angle) - y*np.sin(angle)
+    ny = x*np.sin(angle) + y*np.cos(angle)
+    return nx+e_x, ny+e_y
+
 def cal_limit(file):
     """
     @return
@@ -73,7 +82,7 @@ def parse_benchmark(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
         time:
         mappers:
         reducers:
-        shuffle_t:
+        shuffle_t: MB
     """
     with open(benchmark_file, "r") as f:
         time = []
@@ -83,8 +92,8 @@ def parse_benchmark(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
 
         line = f.readline()
         num_machines, num_jobs = (eval(word) for word in line.split())
-        print("Number of machines:", num_machines)
-        print("Number of jobs:", num_jobs)
+        # print("Number of machines:", num_machines)
+        # print("Number of jobs:", num_jobs)
         for i in range(num_jobs):
             line = f.readline()
             words = line.split()
@@ -99,6 +108,76 @@ def parse_benchmark(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
             reducers.append(r)
             shuffle_t.append(total)
         return time, mappers, reducers, shuffle_t
+
+def classify_analyse():
+    """
+    return position of SN, LN, SW, LW
+    """
+    with open("scripts/FB2010-1Hr-150-0.txt", "r") as f:
+        width = []
+        longest = []
+
+        line = f.readline()
+        num_machines, num_jobs = (eval(word) for word in line.split())
+        for i in range(num_jobs):
+            line = f.readline()
+            words = line.split()
+
+            m = eval(words[2])
+            r = eval(words[3+m])
+            width.append(m*r)
+            max_l = 0
+            for reduce in words[4+m:]:
+                max_l = max(max_l, eval(reduce.split(":")[-1]))
+            longest.append(max_l/m)
+
+    width = np.array(width)
+    size = np.array(longest)
+    bmk_s = 5 #MB
+    bmk_w = 50
+    short = np.argwhere(size <= bmk_s)
+    long = np.argwhere(size > bmk_s)
+    narrow = np.argwhere(width <= bmk_w)
+    wide = np.argwhere(width > bmk_w)
+    sn, ln = np.intersect1d(short, narrow), np.intersect1d(long, narrow)
+    sw, lw = np.intersect1d(short, wide), np.intersect1d(long, wide)
+    # print("SN: %s LN: %s SW: %s LW: %s"%(sn.shape[0]/526, ln.shape[0]/526, sw.shape[0]/526, lw.shape[0]/526))
+    # print("SN: %s LN: %s SW: %s LW: %s"%(sn.shape[0], ln.shape[0], sw.shape[0], lw.shape[0]))
+    return sn, ln, sw, lw
+
+def best_model_log_parse(file="doc/log/success-2/best_run_log.txt"):
+    """
+    Model 110
+    @return:
+        actions: log10 and unit is byte
+        sentsize: log10 and unit is byte
+        coflows: unit is ms
+        result: unit is ms
+    """
+    with open(file, "r") as f:
+        actions = []
+        sentsize = []
+        result = None
+        coflows = None
+        
+        line = f.readline()
+        while line:
+            if line.startswith("step"):
+                words = line.split(":")
+                index = words[-2].find("]")
+                action = eval(words[-2][:index+1])
+                actions.append(np.log10(action).tolist())
+
+                ac = eval(words[-1])
+                sentsize.append([np.log10(e) if e != 0 else 0 for e in ac])
+            # if line.startswith("sentsize"):
+            #     sentsize = eval(line.split(":")[-1])
+            if line.startswith("coflows"):
+                coflows = eval(line.split(":")[-1])
+                coflows = [eval(job.split()[-3]) for job in coflows]
+
+            line = f.readline()
+        return np.array(actions).tolist(), sentsize, coflows, sum(coflows)
 
 def make100coflows(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
     time = []
@@ -184,6 +263,9 @@ def makeLightTail():
             f.write("\n")
 
 def prepare_pm():
+    """
+    return a list of sentsize(log10) in benchmark
+    """
     with open("doc/benchmark_sentsize.txt") as f:
         line = f.readline()
         mlfqs = []
@@ -191,12 +273,11 @@ def prepare_pm():
             if line.startswith("coflow"):
                 mlfqs = eval(line.split(":")[-1])
             line = f.readline()
-    print("steps of benchmark: ", len(mlfqs))
+    # print("steps of benchmark: ", len(mlfqs))
     sent_s = []
     for coflow in mlfqs:
         sent_s.extend(coflow)
-    sent_s = [e for e in sent_s if e != 0]
-    sent_s = np.log10(sent_s)
+    sent_s = [np.log10(e) if e != 0 else 0 for e in sent_s]
     return sent_s
 
 class Logger:
@@ -213,13 +294,13 @@ class Logger:
         log.close()
 
 class KDE():
-    def __init__(self, init, size=10000):
-        self.pool = list(init)
+    def __init__(self, init, size=10000, max_val=20):
+        self.pool = list(init)[-size:]
         self.size = size
         self.pointer = len(self.pool)
 
         # self.max_val = 0
-        self.GAP = 20
+        self.GAP = max_val
         self.kde = gaussian_kde(self.pool)
     
     def push(self, data):
@@ -268,8 +349,7 @@ def smooth_value(x, smoothing=0.9):
     return smoothed
 
 def test():
-    kde = KDE([0, 1])
-    kde.print()
+    best_model_log_parse()
 
 if __name__ == "__main__":
     # print(cal_limit("scripts/FB2010-1Hr-150-0.txt")) # result is ([1, 21170], [1.0, 8501205.0]) MB
@@ -278,5 +358,5 @@ if __name__ == "__main__":
     # print(toFactor([2,4,12,36], 2))
     # make100coflows()
     # makePM()
-    # test()
-    makeLightTail()
+    test()
+    # makeLightTail()

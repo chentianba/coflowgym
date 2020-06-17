@@ -1,9 +1,11 @@
 import numpy as np 
 import codecs
 import sys, math
+import pprint
 import matplotlib.pyplot as plt
 from benchdata import exp4_benchmark_data
 from util import toFactor, prepare_pm, parse_benchmark
+import util
 
 ## DARK / FIFO / SEBF
 configuration = [
@@ -13,9 +15,10 @@ configuration = [
     [2214624.0, 4509552.0, 1952872.0, 0], # test_150_200  ## 3
     [1.5923608E7, 1.3596456E7, 7.337872E6, 0], # test_150_250  ## 4
     [3615440.0, 2906384.0, 2474200.0, 0], # test_200_225 ## 5
+    [3.73975776E8, 5.20843856E8, 2.44592544E8, 343305064.0], # light tail
     [1379944.0, 1785416.0, 1222736.0,1233768.0], # custom
 ]
-choice = -1
+choice = -2
 
 def stats_action(file):
     with open(file, 'r') as f:
@@ -419,6 +422,39 @@ def add_compare(is_benchmark=True):
     plt.plot(x, [comp[2]]*len(x), "lawngreen") # SEBF
     plt.plot(x, [comp[3]]*len(x), "sandybrown") # Target
 
+def parse_run_log(file="log/run.txt"):
+    with open(file, "r") as f:
+        runtime = {}
+        model = -1
+        result = []
+
+        line = f.readline()
+        while line:
+            if line.startswith("Model:"):
+                runtime[model] = result
+                model = eval(line.split(":")[-1])
+                result = []
+            if line.startswith("result"):
+                result.append(eval(line.split(":")[-1].split()[0]))
+
+            line = f.readline()
+        runtime[model] = result
+    del runtime[-1]
+    # print(runtime)
+    pprint.pprint(runtime)
+
+    x, y = [], []
+    for key in runtime:
+        x.extend([key]*len(runtime[key]))
+        y.extend(runtime[key])
+    px = sorted(runtime.keys())
+    py = [[sum(runtime[key])/len(runtime[key]), (np.argmin(runtime[key]), min(runtime[key]))] for key in px]
+
+    plt.figure("run:%s"%(file))
+    plt.scatter(x, y, marker=".")
+    print("debug:", px, py)
+    plt.plot(px, [e[0] for e in py], "r")
+
 def analyse_log(exp_no):
 
     if exp_no == 1:
@@ -528,6 +564,44 @@ def analyse_log(exp_no):
         # plt.xlabel("runtime")
         # plt.ylabel("CDF")
 
+def queue_validate():
+    bmk_sentsize = prepare_pm()
+    # print(sorted(bmk_sentsize))
+    bmk_thresholds = np.arange(7, 16)
+    bmk_queue = [[] for _ in range(10)]
+    for size in bmk_sentsize:
+        q = int(size)
+        if q >= 7 and q < 15:
+            q = q - 6
+        elif q < 7:
+            q = 0
+        else:
+            q = 9
+        # print(q)
+        bmk_queue[q].append(size)
+    bmk_count = [len(e)/len(bmk_sentsize) for e in bmk_queue]
+    plt.figure("Queue Validation")
+    plt.plot(range(10), bmk_count, "o-")
+    # plt.bar([i for i in range(6, 16)], bmk_count)
+    plt.xticks(list(range(10)), ["Q%s"%(i) for i in range(1, 11)])
+
+    actions, sentsize, _, _ = util.best_model_log_parse("doc/log/success-2/best_run_log.txt")
+    print(len(actions), len(sentsize))
+    # for a, b in zip(actions[:10], sentsize[:10]):
+    #     print(a, b)
+    count = [0 for _ in range(10)]
+    for action, sent in zip(actions, sentsize):
+        for size in sent:
+            i = 0
+            while i < 9 and size >= action[i]:
+                i += 1
+            count[i] += 1
+    print(count)
+    total = sum([len(e) for e in sentsize])
+    plt.plot(range(10), np.array(count)/total, "-")
+    plt.legend(["Aalo", "DRL"])
+    
+
 if __name__ == "__main__":
     
     analyse_log(-6)
@@ -545,5 +619,10 @@ if __name__ == "__main__":
     # dark_analyse()
 
     # analyse_samples("log/run_8000.txt")
+
+    # parse_run_log()
+    # parse_run_log("log/6_run.txt")
+
+    # queue_validate()
 
     plt.show()
