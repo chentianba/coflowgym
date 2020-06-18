@@ -109,11 +109,11 @@ def parse_benchmark(benchmark_file="scripts/FB2010-1Hr-150-0.txt"):
             shuffle_t.append(total)
         return time, mappers, reducers, shuffle_t
 
-def classify_analyse():
+def classify_analyse(file="scripts/FB2010-1Hr-150-0.txt"):
     """
     return position of SN, LN, SW, LW
     """
-    with open("scripts/FB2010-1Hr-150-0.txt", "r") as f:
+    with open(file, "r") as f:
         width = []
         longest = []
 

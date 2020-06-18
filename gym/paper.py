@@ -68,6 +68,23 @@ def get_training():
     result, ep_r = benchdata.success_2_data()
     return result, ep_r
 
+### TODO: 制作coflow数据的表格：SN、LN、SW、LW
+def makeTableData():
+    def oneData(file="scripts/FB2010-1Hr-150-0.txt"):
+        print("using", file)
+        bin_index = util.classify_analyse(file)
+        _, _, _, shuffle= util.parse_benchmark(file)
+        bin_c_num = [len(e) for e in bin_index]
+        bin_c_percentile = np.array(bin_c_num)/sum(bin_c_num)
+        print("Percentile of Coflows:", ["%s%%"%(round(e, 2)*100) for e in bin_c_percentile])
+        data = np.array(shuffle)
+        bin_c_megabyte = [sum(data[e]) for e in bin_index]
+        bin_byte_per = np.array(bin_c_megabyte)/sum(bin_c_megabyte)
+        print("Percentile of Bytes:", ["%s%%"%(round(e*100, 2)) for e in bin_byte_per])
+    
+    oneData()
+    oneData("scripts/light_tail.txt")
+
 ### TODO: Benchmark CDF
 def plot_CDF():
     _, _, _, shuffle_t = util.parse_benchmark()
@@ -94,9 +111,9 @@ def plot_CDF():
 
     plt.xlabel("Coflow Size(Megabytes)", fontsize=14)
     plt.ylabel("Fraction of Coflows", fontsize=14)
-    plt.legend(["facebook", "light tail"], fontsize=14)
+    plt.legend(["Facebook", "LightTail"], fontsize=14)
 
-    plt.savefig("doc/paper/CDF.png")
+    # plt.savefig("doc/paper/CDF.png")
 
 ### TODO: CCT指标对比（平均和95th）
 def compare_CCT():
@@ -200,7 +217,7 @@ def compare_CDFofCCT():
     plt.plot(x_drl, y_drl, "black")
     e_x, e_y = util.get_ellipse(2.9, 0.9875, 0.4, .0125, 1)
     # plt.plot([2.5, 3.3], [0.975, 1], ".")
-    plt.plot(e_x, e_y, color="r", linestyle="-.")
+    plt.plot(e_x, e_y, color="red", linestyle="-.")
     print(plt.xlim())
 
     yts = [round(0.85+0.05*i, 2) for i in range(4)]
@@ -230,8 +247,8 @@ def get_train_result():
     sns.set_style('whitegrid')
     plt.figure("Training")
     plt.rc("font", family="Times New Roman")
-    plt.plot(x, data_sm, "-", color="b")
-    plt.plot(x, data, "-", alpha=0.35, color="b")
+    plt.plot(x, data_sm, "-", color=CMAP["deep orange"])
+    plt.plot(x, data, "-", alpha=0.5, color=CMAP["shade orange"])
 
     plt.legend(["Facebook"], fontsize=14)
     plt.grid(linestyle="-.")
@@ -251,8 +268,8 @@ def get_train_result():
 
     plt.figure("Episodic Reward")
     plt.rc("font", family="Times New Roman")
-    plt.plot(x, rs_sm, "-", color="b")
-    plt.plot(x, normalize_rs, "-", alpha=0.35, color="b")
+    plt.plot(x, rs_sm, "-", color=CMAP["deep orange"])
+    plt.plot(x, normalize_rs, "-", alpha=0.5, color=CMAP["shade orange"])
 
     plt.legend(["Facebook"], fontsize=14)
     plt.grid(linestyle="-.")
@@ -281,7 +298,7 @@ def raise_question():
     x = range(10)
     q_count = np.array(queues)/sum(queues)
     print("Percentile in Aalo:", q_count)
-    xlabels = ["Q%s"%(i) for i in range(10)]
+    xlabels = ["Q%s"%(i+1) for i in range(10)]
 
     import seaborn as sns    
     sns.set_style("whitegrid", {'axes.grid' : False})
@@ -357,7 +374,9 @@ if __name__ == "__main__":
     # test()
     pass
 
-    plot_CDF()
+    makeTableData()
+
+    # plot_CDF()
 
     # compare_CDFofCCT()
 
