@@ -189,6 +189,9 @@ def compare_CDFofCCT():
     data_drl = np.array(data_drl)
     x_drl, y_drl = get_x_y(np.log10(data_drl))
 
+    max_x_val = [max(np.log10(data)) for data in [data_sebf, data_dark, data_fair, data_drl]]
+    print("Max-X-axis:", max_x_val)
+
     import seaborn as sns; sns.set_style("whitegrid")
     sns.set_palette(sns.color_palette("muted", 10)) ## set default paltte
     plt.figure("CDF of CCT")
@@ -218,7 +221,6 @@ def compare_CDFofCCT():
     e_x, e_y = util.get_ellipse(2.9, 0.9875, 0.4, .0125, 1)
     # plt.plot([2.5, 3.3], [0.975, 1], ".")
     plt.plot(e_x, e_y, color="red", linestyle="-.")
-    print(plt.xlim())
 
     yts = [round(0.85+0.05*i, 2) for i in range(4)]
     plt.yticks(yts[1:], yts[1:], fontsize=14)
@@ -239,7 +241,7 @@ def get_train_result():
     result, ep_r = parse_log(("doc/log/success-2/log/log_10.txt"))
     start, end = 1, 380
     
-    x = range(start, end+1)
+    x = np.arange(start, end+1)*450
     data = np.array(result[:end])/1024/526
     data_sm = util.smooth_value(data, smoothing=0.9)
 
@@ -250,13 +252,15 @@ def get_train_result():
     plt.plot(x, data_sm, "-", color=CMAP["deep orange"])
     plt.plot(x, data, "-", alpha=0.5, color=CMAP["shade orange"])
 
-    plt.legend(["Facebook"], fontsize=14)
+    # plt.legend(["Facebook"], fontsize=14)
     plt.grid(linestyle="-.")
     plt.ylabel("Average CCT(seconds)", fontsize=14)
-    plt.xlabel("Training Episodes", fontsize=14)
-    plt.ylim([30, 90])
-    plt.xlim([0, end])
-    plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)), fontsize=14)
+    plt.xlabel("Training Steps(Thousands)", fontsize=14)
+    plt.ylim([30, 85])
+    plt.xlim([0, end*450])
+    # plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)), fontsize=14)
+    xts = np.arange(25, 175, 25)
+    plt.xticks(xts*1000, xts, fontsize=14)
     yts = range(30, 90, 10)
     plt.yticks(yts, yts, fontsize=14)
 
@@ -271,13 +275,13 @@ def get_train_result():
     plt.plot(x, rs_sm, "-", color=CMAP["deep orange"])
     plt.plot(x, normalize_rs, "-", alpha=0.5, color=CMAP["shade orange"])
 
-    plt.legend(["Facebook"], fontsize=14)
+    # plt.legend(["Facebook"], fontsize=14)
     plt.grid(linestyle="-.")
     plt.ylabel("Normalized Reward", fontsize=14)
-    plt.xlabel("Training Episodes", fontsize=14)
-    # plt.ylim([30, 90])
-    plt.xlim([0, end])
-    plt.xticks(list(range(50, 400, 50)), list(range(50, 400, 50)), fontsize=14)
+    plt.xlabel("Training Steps(Thousands)", fontsize=14)
+    plt.xlim([0, end*450])
+    plt.xticks(xts*1000, xts, fontsize=14)
+    plt.ylim([0, 1])
     plt.yticks(fontsize=14)
 
     # plt.savefig("doc/paper/ep_reward.png")
@@ -374,18 +378,25 @@ if __name__ == "__main__":
     # test()
     pass
 
-    makeTableData()
+    # makeTableData()
+    # print()
 
     # plot_CDF()
+    # print()
 
     # compare_CDFofCCT()
+    # print()
 
     # compare_CCT()
+    # print()
 
-    # get_train_result()
+    get_train_result()
+    print()
 
     # raise_question()
+    # print()
 
     # validate_question()
+    # print()
 
     plt.show()
