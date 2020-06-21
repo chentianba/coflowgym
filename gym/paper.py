@@ -46,6 +46,7 @@ def get_heuristic_coflow(method="dark", useBin=True):
         data = analyse.dark_analyse(file, False)/1024 # transform unit to second
     else:
         data = np.array(util.best_model_log_parse()[2])/1024
+    
     if useBin:
         sn, ln, sw, lw = [data[e] for e in util.classify_analyse()]
         ave = [sum(e)/len(e) for e in [sn, ln, sw, lw]]+[sum(data)/len(data)]
@@ -254,7 +255,7 @@ def get_train_result():
 
     # plt.legend(["Facebook"], fontsize=14)
     plt.grid(linestyle="-.")
-    plt.ylabel("Average CCT(seconds)", fontsize=14)
+    plt.ylabel("Average CCT(Seconds)", fontsize=14)
     plt.xlabel("Training Steps(Thousands)", fontsize=14)
     plt.ylim([30, 85])
     plt.xlim([0, end*450])
@@ -353,25 +354,144 @@ def validate_question():
     plt.figure("Question Validation")
     plt.rc("font", family="Times New Roman")
     
-    plt.plot(range(10), bmk_count, color=CMAP["deep blue"], marker="o", linestyle="--")
-    plt.plot(range(10), percetile, color=CMAP["deep orange"], marker="s", linestyle="--")
+    # plt.plot(range(10), bmk_count, color=CMAP["deep blue"], marker="o", linestyle="--")
+    # plt.plot(range(10), percetile, color=CMAP["deep orange"], marker="s", linestyle="--")
+    width = 0.45
+    x = np.arange(1-width/2, 10, 1)
+    plt.bar(x, bmk_count, width=width, color=CMAP["deep blue"])
+    plt.bar(x+width, percetile, width=width, color=CMAP["deep orange"])
+    for i, xi in enumerate(x):
+        plt.text(xi, bmk_count[i], round(bmk_count[i], 2), horizontalalignment='center', verticalalignment='bottom', fontdict={'size':12}, rotation=0)
+        plt.text(xi+width, percetile[i], round(percetile[i], 2), horizontalalignment='center', verticalalignment='bottom', fontdict={'size':12}, rotation=0)
 
-    plt.xticks(list(range(10)), ["Q%s"%(i) for i in range(1, 11)], fontsize=14)
+    plt.xticks(list(range(1, 1+10)), ["Q%s"%(i) for i in range(1, 11)], fontsize=14)
     yts = [round(0.1*i,2) for i in range(7)]
     plt.yticks(yts, yts, fontsize=14)
     plt.legend(["Aalo", "M-DRL"], fontsize=14)
     plt.ylabel("Fraction of Active Coflows", fontsize=14)
     plt.xlabel("Multi-Level Feedback Queue", fontsize=14)
 
+def light_tail():
+    def get_ave_and_95th(data):
+        data = sorted(data)
+        ave = sum(data)/len(data)
+        position = int(len(data)*.95)-1
+        return data[position], ave
+
+    data_sebf = analyse.dark_analyse("doc/log/lighttail/sebf.txt", False)/1024 # transform unit to second
+    x_sebf, y_sebf = get_x_y(np.log10(data_sebf))
+
+    data_dark = analyse.dark_analyse("doc/log/lighttail/dark.txt", False)/1024
+    x_dark, y_dark = get_x_y(np.log10(data_dark))
+
+    data_fair = analyse.dark_analyse("doc/log/lighttail/fair.txt", False)/1024
+    x_fair, y_fair = get_x_y(np.log10(data_fair))
+
+    _, _, data_drl, _ = util.best_model_log_parse("doc/log/lighttail/best_run_log.txt")
+    data_drl = np.array(data_drl)/1024
+    x_drl, y_drl = get_x_y(np.log10(data_drl))
+
+    max_x_val = [max(np.log10(data)) for data in [data_sebf, data_dark, data_fair, data_drl]]
+    min_x_val = [min(np.log10(data)) for data in [data_sebf, data_dark, data_fair, data_drl]]
+    print("Min-X-axis:", min(min_x_val), " Max-X-axis:", max(max_x_val))
+
+    import seaborn as sns; sns.set_style("whitegrid")
+    sns.set_palette(sns.color_palette("muted", 10)) ## set default paltte
+    plt.figure("CDF of CCT in LightTail")
+    plt.rc("font", family="Times New Roman")
+
+    plt.plot(x_sebf, y_sebf)
+    plt.plot(x_dark, y_dark)
+    plt.plot(x_fair, y_fair)
+    plt.plot(x_drl, y_drl, "black")
+
+    plt.ylim([0, 1])
+    plt.yticks([0.5, 1], [0.5, 1.0], fontsize=14)
+    plt.xlim([0, 4.5])
+    plt.xticks([0, 1, 2, 3, 4], [1, 10, 100, 1000, 10000], fontsize=14)
+    plt.grid(linestyle="-.")
+
+    plt.xlabel("Coflow Completion Time(Seconds)", fontsize=14)
+    plt.ylabel("Fraction of Coflows", fontsize=14)
+    plt.legend(["SEBF", "Aalo", "Per-Flow Fairness", "M-DRL"], fontsize=12)
+
+    ## ************************ Compare CCT  **************************** ##
+    sebf = np.array(get_ave_and_95th(data_sebf))
+    dark = np.array(get_ave_and_95th(data_dark))
+    fair = np.array(get_ave_and_95th(data_fair))
+    drl = np.array(get_ave_and_95th(data_drl))
+    
+    print("Improvement:", sebf/drl, dark/drl, fair/drl)
+    plt.figure("Compare CCT in LightTail")
+    plt.grid(False)
+    width = 0.3
+    p = []
+    x = np.array([1, 2])-width
+    colors = [
+        [CMAP["deep blue"], CMAP["shade blue"]],
+        [CMAP["deep orange"], CMAP["shade orange"]],
+        [CMAP["deep green"], CMAP["shade green"]]
+    ]
+    for i, e in enumerate([sebf/drl, dark/drl, fair/drl]):
+        xx = x+i*width
+        p.append(plt.bar(xx, e, width=width, color=colors[i][0]))
+        # for xi, val in zip(xx, e):
+        #     plt.text(xi, val, round(val, 2), horizontalalignment='center', verticalalignment='bottom', fontdict={'size':12}, rotation=0)
+    plt.plot(plt.xlim(), [1,1], "black")
+
+    plt.xticks([1, 2], ["Average", "95th"], fontsize=14)
+    plt.ylim([0, 1.8])
+    plt.yticks([1], [1], fontsize=14)
+    plt.legend(p, ["SEBF", "Aalo", "Per-Flow Fairness"], fontsize=13)#, ncol=3)
+    plt.ylabel("Normalized Comp.Time\nw.r.t.M-DRL", fontsize=14)
+    plt.xlabel("Coflow Metric", fontsize=14)
+
+    ## **************** get training result ************************* ##
+    import benchdata
+    result, ep_r = benchdata.light_tail_data()
+    start, end = 1, 220
+    
+    x = np.arange(start, end+1)*2700
+    data = np.array(result[:end])/1024/100
+    data_sm = util.smooth_value(data, smoothing=0.9)
+
+    plt.figure("Training in LightTail")
+    plt.rc("font", family="Times New Roman")
+    plt.plot(x, data_sm, "-", color=CMAP["deep orange"])
+    plt.plot(x, data, "-", alpha=0.5, color=CMAP["shade orange"])
+
+    plt.grid(linestyle="-.")
+    plt.ylabel("Average CCT(Seconds)", fontsize=14)
+    plt.xlabel("Training Steps(Thousands)", fontsize=14)
+    plt.xlim([0, end*2700])
+    xts = np.array(range(100, 600, 100))
+    plt.xticks(xts*1000, xts, fontsize=14)
+    # plt.ylim([30, 85])
+    yts = np.array(range(3000, 5500, 500))
+    plt.yticks(yts, ["%sk"%(round(e/1000, 1)) for e in yts], fontsize=14)
+
+    # ******************************************************************* #
+    rs = np.array(ep_r[:end])
+    normalize_rs = (rs - min(rs))/(max(rs) - min(rs))
+    rs_sm = util.smooth_value(normalize_rs, smoothing=0.9)
+
+    plt.figure("Episodic Reward in LightTail")
+    plt.rc("font", family="Times New Roman")
+    plt.plot(x, rs_sm, "-", color=CMAP["deep orange"])
+    plt.plot(x, normalize_rs, "-", alpha=0.5, color=CMAP["shade orange"])
+
+    plt.grid(linestyle="-.")
+    plt.ylabel("Normalized Reward", fontsize=14)
+    plt.xlabel("Training Steps(Thousands)", fontsize=14)
+    plt.xlim([0, end*2700])
+    xts = np.array(range(100, 600, 100))
+    plt.xticks(xts*1000, xts, fontsize=14)
+    plt.ylim([0, 1])
+    plt.yticks(fontsize=14)
+
 def test():
     pass
-    x, y = util.get_ellipse(0, 0, 2, 1, 45)
-    plt.plot(x, y)
-    plt.grid()
-    plt.xlim(-5, 5)
-    plt.ylim(-5, 5)
-    plt.xticks(range(-5, 5), range(-5, 5))
-    plt.yticks(range(-5, 5), range(-5, 5))
+    plt.bar([1, 2], [1,2])
 
 if __name__ == "__main__":
 
@@ -390,13 +510,15 @@ if __name__ == "__main__":
     # compare_CCT()
     # print()
 
-    get_train_result()
-    print()
+    # get_train_result()
+    # print()
 
     # raise_question()
     # print()
 
     # validate_question()
     # print()
+
+    light_tail()
 
     plt.show()

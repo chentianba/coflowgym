@@ -49,7 +49,26 @@ args5 = {
     "data": "./scripts/light_tail.txt"
 } ## light tail: Test the target of Active Coflows
 
-choice = args5
+args6 = {
+    "data": "./scripts/light_tail.txt",
+    "models": list(range(40, 300, 10)),
+    "model_dir": "doc/log/lighttail/models/2020-6-18-16-17-36", 
+    "episode": 3,
+    "is_shuffle": True,
+    "detailed": False
+} ## light tail: 对light tail中40-300范围内的model进行测试
+
+args7 = {
+    "data": "./scripts/light_tail.txt",
+    "models": [70, 120],
+    "model_dir": "doc/log/lighttail/models/2020-6-18-16-17-36", 
+    "episode": 50,
+    "is_shuffle": False,
+    "detailed": True
+} ## light tail: 对light tail中最好的model进行测试
+
+
+choice = args7
 
 def run(env, args):
     a_dim = env.action_space.shape[0]
@@ -278,9 +297,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    # run(env, choice)
+    run(env, choice)
     # run_coflowsim(env)
-    run_human(env)
+    # run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 

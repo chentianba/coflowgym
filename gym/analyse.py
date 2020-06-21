@@ -449,6 +449,16 @@ def parse_run_log(file="log/run.txt"):
         y.extend(runtime[key])
     px = sorted(runtime.keys())
     py = [[sum(runtime[key])/len(runtime[key]), (np.argmin(runtime[key]), min(runtime[key]))] for key in px]
+    py = []
+    for key in px:
+        if len(runtime[key]) < 10:
+            py.append([sum(runtime[key])/len(runtime[key]), (np.argmin(runtime[key]), min(runtime[key]))])
+        else:
+            t = sorted(runtime[key])
+            l = len(t)
+            t = t[l//5: l*4//5]
+
+            py.append([sum(t)/len(t), (np.argmin(runtime[key]), min(runtime[key]))])
 
     plt.figure("run:%s"%(file))
     plt.scatter(x, y, marker=".")
@@ -604,7 +614,7 @@ def queue_validate():
 
 if __name__ == "__main__":
     
-    analyse_log(-6)
+    # analyse_log(-6)
 
     # stats_action("log/log.txt")
     
@@ -620,7 +630,7 @@ if __name__ == "__main__":
 
     # analyse_samples("log/run_8000.txt")
 
-    # parse_run_log()
+    parse_run_log()
     # parse_run_log("log/6_run.txt")
 
     # queue_validate()
