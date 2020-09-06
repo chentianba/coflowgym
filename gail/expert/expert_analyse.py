@@ -5,6 +5,19 @@ import pandas as pd
 import matplotlib.gridspec as gridspec
 import math
 
+sscf_dark_data = [
+    [1,    1.892824E7],
+    [2,    1.4671248E7],
+    [3,    1.432372E7],
+    [4,    1.3928736E7],
+    [4.25, 1.392728E7],
+    [4.5,  1.3926672E7],
+    [4.75, 1.3926672E7],
+    [4.8,  1.3926784E7],
+    [4.9,  1.3926784E7],
+    [5,    1.9272504E7]
+]
+
 def get_sebf_log(filename="gail/sebf-expert.txt"):
     with open(filename, "r") as f:
         line = f.readline()
@@ -124,9 +137,18 @@ def rebuild_mlfq_based_on_sebf():
     plt.legend(['min', 'max', 'average'])
     plt.show()
 
+def plot_sscf_dark():
+    sns.set_style('white')
+
+    data = np.array(sorted(sscf_dark_data, key=lambda x : x[0]))
+    print(data)
+    plt.plot(data[:, 0], data[:, 1], 'o-')
+    plt.show()
 
 if __name__ == "__main__":
     pass
-    analyse_sebf_log()
+    # analyse_sebf_log()
 
-    rebuild_mlfq_based_on_sebf()
+    # rebuild_mlfq_based_on_sebf()
+
+    plot_sscf_dark()

@@ -215,3 +215,8 @@ class CoflowSimEnv(Env):
     
     def close(self):
         pass
+
+if __name__ == "__main__":
+    pass
+    print(sys.path)
+    print("ok")

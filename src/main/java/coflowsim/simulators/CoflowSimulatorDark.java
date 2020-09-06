@@ -181,7 +181,11 @@ public class CoflowSimulatorDark extends CoflowSimulator {
     for (int i = 0; i < NUM_JOB_QUEUES; i++) {
       Vector<Job> jobsToMove = new Vector<Job>();
       for (Job j : sortedJobs[i]) {
-        double size = j.shuffleBytesCompleted;
+        /**
+         * size可以设置为已发送大小和shuffle总大小
+         */
+        // double size = j.shuffleBytesCompleted;
+        double size = j.totalShuffleBytes;
         int curQ = 0;
         // for (double k = INIT_QUEUE_LIMIT; k < size; k *= JOB_SIZE_MULT) {
         //   curQ += 1;
