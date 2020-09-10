@@ -16,3 +16,4 @@ logs/*
 *log*.txt
 models/*
 tf_log/*
+*.log
