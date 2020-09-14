@@ -79,10 +79,10 @@ def gail_train():
         state_shape=env.observation_space.shape,
         action_dim=env.action_space.high.size,
         max_action=env.action_space.high[0],
-        gpu=args.gpu,
+        gpu=-1, # -1 is only cpu
         actor_units=units,
         critic_units=units,
-        n_warmup=10000,
+        n_warmup=100, # default is 10000
         batch_size=100)
     irl = GAIL(
         state_shape=env.observation_space.shape,
@@ -90,7 +90,7 @@ def gail_train():
         units=units,
         enable_sn=args.enable_sn,
         batch_size=32,
-        gpu=args.gpu)
+        gpu=-1) # -1 is only cpu
     obs, act, obs_n = read_expert_trajs()
     trainer = IRLTrainer(policy, env, args, irl, obs, obs_n, act, test_env)
     trainer()

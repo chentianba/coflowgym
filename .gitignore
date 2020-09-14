@@ -17,3 +17,4 @@ logs/*
 models/*
 tf_log/*
 *.log
+.vscode
