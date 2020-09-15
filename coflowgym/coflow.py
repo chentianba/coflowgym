@@ -1,12 +1,12 @@
 from jpype import *
 import os
 from gym import Env, spaces
-from algo.ddpg import DDPG
-from algo.ddpg import OUNoise
+from coflowgym.algo.ddpg import DDPG
+from coflowgym.algo.ddpg import OUNoise
 import numpy as np
 import json
 import math, sys, time
-from util import Logger
+from coflowgym.util import Logger
 
 # logger = Logger("log/mlfq.txt")
 # logger = Logger("log/result.txt")

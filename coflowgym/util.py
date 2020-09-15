@@ -356,7 +356,7 @@ if __name__ == "__main__":
     # print(cal_limit("log/tmp.txt"))
     pass
     # print(toFactor([2,4,12,36], 2))
-    # make100coflows()
+    make100coflows()
     # makePM()
-    test()
+    # test()
     # makeLightTail()

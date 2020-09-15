@@ -1,7 +1,7 @@
 import numpy as np 
 import sys, time, os, math, json
 from jpype import *
-from coflow import CoflowSimEnv
+from coflowgym.coflow import CoflowSimEnv
 from tf2rl.algos.ddpg import DDPG
 from tf2rl.algos.gail import GAIL
 from tf2rl.experiments.irl_trainer import IRLTrainer
@@ -30,12 +30,12 @@ def config_env(newInstance=False):
     gym = CoflowGym(args)
     return CoflowSimEnv(gym)
 
-def train():
+def get_train_samples():
     env = config_env()
     print("Env:", env)
     thresholds = get_threshold()
     print(thresholds)
-    save_in_json = True
+    save_in_json = False
 
     expert_data = {"obs":[], "obs_n":[], "act":[], "rew":[], "done":[]}
     for ep in range(1):
@@ -66,42 +66,7 @@ def train():
         f = open("./scripts/expert.json", "w", encoding="utf-8")
         json.dump(expert_data, f)
 
-def gail_train():
-    parser = IRLTrainer.get_argument()
-    parser = GAIL.get_argument(parser)
-    parser.add_argument("--logdir", type=str, default="log/results")
-    args = parser.parse_args()
-
-    env = config_env()
-    test_env = config_env(True)
-    units = [400, 300]
-    policy = DDPG(
-        state_shape=env.observation_space.shape,
-        action_dim=env.action_space.high.size,
-        max_action=env.action_space.high[0],
-        gpu=-1, # -1 is only cpu
-        actor_units=units,
-        critic_units=units,
-        n_warmup=100, # default is 10000
-        batch_size=100)
-    irl = GAIL(
-        state_shape=env.observation_space.shape,
-        action_dim=env.action_space.high.size,
-        units=units,
-        enable_sn=args.enable_sn,
-        batch_size=32,
-        gpu=-1) # -1 is only cpu
-    obs, act, obs_n = read_expert_trajs()
-    trainer = IRLTrainer(policy, env, args, irl, obs, obs_n, act, test_env)
-    trainer()
-
-
-def read_expert_trajs():
-    f = open("scripts/expert_1.json", "r")
-    data = json.load(f)
-    return np.array(data["obs"]), np.array(data["act"]), np.array(data["obs_n"])
 
 if __name__ == "__main__":
     pass
-    # train()
-    gail_train()
+    get_train_samples()

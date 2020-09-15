@@ -67,8 +67,12 @@ args7 = {
     "detailed": True
 } ## light tail: 对light tail中最好的model进行测试
 
+args8 = {
+    "data": "scripts/test.txt"
+} ## 测试生成的trace
 
-choice = args7
+
+choice = args8
 
 def run(env, args):
     a_dim = env.action_space.shape[0]
@@ -204,6 +208,10 @@ def human_inst(env, obs):
     return count.reshape(5, 3)
 
 def instruction(coflows):
+    """
+    generate adaptive thresholds by hand, and i-th threshold is the average 
+    between i-th coflow and i+1-th coflow in sorted coflow set
+    """
     c_set = set(coflows)
     c_set = sorted(c_set)
     n = len(c_set)
@@ -226,6 +234,10 @@ def instruction(coflows):
         return threshold
 
 def run_human(env):
+    """
+    adopt adaptive thresholds to run coflowsim.
+    We need to continue improving only if the cct is less than dark.
+    """
     a_dim = env.action_space.shape[0]
     s_dim = env.observation_space.shape[0]
     a_bound = env.action_space.high
@@ -256,8 +268,8 @@ def run_human(env):
             if done:
                 print("\nepisode %s: step %s, ep_reward %s"%(episode, i, ep_reward))
                 result, _ = env.getResult()
+                # print("coflow set:", acs)
                 print("result: ", result, type(result))
-                print("coflow set:", acs)
                 break
     env.close()
     print("Game is over!")
@@ -268,7 +280,7 @@ def config_env():
     startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=%s/target/coflowsim-0.2.0-SNAPSHOT.jar"%(jarpath), convertStrings=False)
 
     java.lang.System.out.println("Hello World!")
-    testfile = "./scripts/100coflows.txt"
+    testfile = "./scripts/test.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
     # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 
@@ -297,9 +309,9 @@ if __name__ == "__main__":
 
     # main loop
     begin = time.time()
-    run(env, choice)
+    # run(env, choice)
     # run_coflowsim(env)
-    # run_human(env)
+    run_human(env)
     # sample(6)
     print("Consume Time:", get_h_m_s(time.time()-begin))
 
