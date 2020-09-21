@@ -1,11 +1,17 @@
 import numpy as np 
 import sys, time, os, math, json
 from jpype import *
-from coflowgym.coflow import CoflowSimEnv
-from tf2rl.algos.ddpg import DDPG
-from tf2rl.algos.gail import GAIL
-from tf2rl.experiments.irl_trainer import IRLTrainer
-from tf2rl.experiments.trainer import Trainer
+from coflowgym.coflow import CoflowSimEnv, CoflowKDEEnv
+
+from lib.tf2rl.tf2rl.algos.ddpg import DDPG
+from lib.tf2rl.tf2rl.algos.gail import GAIL
+from lib.tf2rl.tf2rl.experiments.irl_trainer import IRLTrainer
+from lib.tf2rl.tf2rl.experiments.trainer import Trainer
+
+# from tf2rl.algos.ddpg import DDPG
+# from tf2rl.algos.gail import GAIL
+# from tf2rl.experiments.irl_trainer import IRLTrainer
+# from tf2rl.experiments.trainer import Trainer
 
 def config_env(newInstance=False):
     if not newInstance:
@@ -15,11 +21,12 @@ def config_env(newInstance=False):
 
     java.lang.System.out.println("Hello World!")
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
+    benchmark = "./scripts/valid_1.txt"
     args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
-    return CoflowSimEnv(gym)
+    return CoflowKDEEnv(gym)
 
 def gail_train():
     parser = IRLTrainer.get_argument()
@@ -37,7 +44,7 @@ def gail_train():
         gpu=-1, # -1 is only cpu
         actor_units=units,
         critic_units=units,
-        n_warmup=100, # default is 10000
+        n_warmup=10, # default is 10000
         batch_size=100)
     irl = GAIL(
         state_shape=env.observation_space.shape,

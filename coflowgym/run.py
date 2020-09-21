@@ -68,7 +68,7 @@ args7 = {
 } ## light tail: 对light tail中最好的model进行测试
 
 args8 = {
-    "data": "scripts/test.txt"
+    "data": "scripts/valid_2.txt"
 } ## 测试生成的trace
 
 

@@ -6,7 +6,7 @@ from coflowgym.algo.ddpg import OUNoise
 import numpy as np
 import json
 import math, sys, time
-from coflowgym.util import Logger
+from coflowgym.util import Logger, KDE
 
 # logger = Logger("log/mlfq.txt")
 # logger = Logger("log/result.txt")
@@ -215,6 +215,132 @@ class CoflowSimEnv(Env):
     
     def close(self):
         pass
+
+
+class CoflowKDEEnv(Env):
+    def __init__(self, gym, debug=True):
+        self.coflowsim = gym
+        self.NUM_COFLOW = self.coflowsim.MAX_COFLOW # 10
+        self.UNIT_DIM = 4 # id, width/1000, sent_bytes, duration_time/1000
+        self.STATE_DIM = self.NUM_COFLOW*self.UNIT_DIM
+        self.ACTION_DIM = 9
+
+        self.low_property = np.zeros((self.UNIT_DIM,))
+        assert self.UNIT_DIM == 4, "UNIT_DIM != 4"
+        self.high_property = np.array([526, 21170, 8501205*1048576, 0]) # B, ms
+        
+        self.observation_space = spaces.Box(0, 1, (self.STATE_DIM,))
+        self.action_space = spaces.Box(0, 1, (self.ACTION_DIM,))
+
+        self.MB = 1024*1024 # 1MB = ? B
+        self.__initialize()
+
+        self.debug = debug
+
+    def __initialize(self):
+        self.old_throughout = 0
+        self.old_ave_duration = 0
+        self.ep_f_coflows = []
+
+        self.kde = KDE(list(range(15))*667)
+
+    def step(self, action):
+        ## action is from nerual network and we need to convert it into MLFQ thresholds
+        action = np.clip(action, -1, 1)
+        action = sorted(action)
+        # sent_s = np.log10([e for e in sentsize if e != 0])
+        acts = [self.kde.get_val((a+1)/2) for a in action]
+        action = np.power(10, acts)
+
+        return self.__step(action)
+
+
+    def __step(self, action):
+        # correction for action
+        # action = np.clip(action, 1e-10, 100)
+
+        res = self.coflowsim.toOneStep(action)
+        # print("res", res)
+        result = json.loads(str(res))
+        obs = result["observation"]
+        obs = self.__parseObservation(obs)
+        done = result["done"]
+        mlfq = eval(result["MLFQ"])
+        # if self.debug:
+        #     logger.print("MLFQ: "+str(mlfq))
+        # obs = self.coflowsim.printStats()
+        # obs = np.zeros(self.observation_space.shape)
+
+        ### calculate the reward
+        # print("result: ", result)
+        completed = result["completed"]
+        a_coflows = eval(result["observation"].split(":")[-1])
+        c_coflows = eval(completed.split(":")[-1])
+        reward = self.__cal_reward_4(a_coflows, c_coflows) ## best
+
+        # print("completed: ", [coflow[0] for coflow in c_coflows])
+        ac = [coflow[2] for coflow in eval(result["observation"].split(":")[-1])]
+        self.kde.push(np.log10([e for e in ac if e != 0]))
+        self.kde.update()
+        
+        return obs, reward, done, {"mlfq":mlfq, "obs":result["observation"]}
+
+    def __cal_reward_4(self, a_coflows, c_coflows):
+        n = len(self.ep_f_coflows)
+        old_ave = sum(self.ep_f_coflows)/n if n != 0 else 0
+        for coflow in c_coflows:
+            self.ep_f_coflows.append(coflow[-1]/1024)
+        total_t = 0
+        for coflow in a_coflows:
+            total_t += (coflow[-1]/1024)
+        total_t += sum(self.ep_f_coflows)
+        n = (len(self.ep_f_coflows)+len(a_coflows))
+        ave_cct = total_t / n if n != 0 else 0
+        diff = ave_cct - old_ave
+        return -diff
+
+    def __parseObservation(self, obs):
+        arr = obs.split(":")[-1]
+        arrs = sorted(eval(arr), key=lambda x: x[2], reverse=True) # sort according to sent bytes
+        arrs = arrs[:self.NUM_COFLOW]
+        state = []
+        for a in arrs:
+            ## id, width, already bytes(B), duration time(ms)
+            # power = int(math.log(a[2], 10)) if a[2] != 0 else 0
+            # b = (a[0], a[1]/1000, a[2]/(10**power), power, a[3]/1000)
+            if a[3] > self.high_property[3]:
+                self.high_property[3] = a[3]
+            # print("parse: ", a, self.low_property, self.high_property)
+            b = [(a[i]-self.low_property[i])/(self.high_property[i]-self.low_property[i]) for i in range(self.UNIT_DIM)]
+            # print(b)
+            state.extend(b)
+        if len(arrs) < self.NUM_COFLOW:
+            state.extend([0]*(self.NUM_COFLOW-len(arrs))*self.UNIT_DIM)
+        return np.array(state)
+
+    def getResult(self):
+        stats = str(self.coflowsim.printStats())
+        lines = stats.split("\n")
+        result = eval(lines[-1]) # unit is milli second(ms)
+        cf_info = lines[:-1]
+        return result, cf_info
+    
+    def reset(self):
+        result, cf_info = self.getResult()
+        print("Result: ", result)
+
+        self.__initialize()
+
+        obs = self.coflowsim.reset()
+        return self.__parseObservation(str(obs))
+    
+    def render(self):
+        pass
+    
+    def close(self):
+        pass
+
+
 
 if __name__ == "__main__":
     pass
