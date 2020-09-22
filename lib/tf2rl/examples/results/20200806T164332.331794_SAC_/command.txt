@@ -1,1 +1,0 @@
-run_sac.py --env-name=Pendulum-v0 --save-test-path --test-interval=50000
