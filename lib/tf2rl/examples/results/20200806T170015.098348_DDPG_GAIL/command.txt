@@ -1,0 +1,1 @@
+run_gail_ddpg.py --env-name=Pendulum-v0 --expert-path-dir results/20200806T164332.331794_SAC_/ --test-interval=5000 --save-test-movie

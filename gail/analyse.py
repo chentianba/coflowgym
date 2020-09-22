@@ -22,7 +22,7 @@ def analyse_reward_list():
             print()
 
 def analyse_result_log():
-    file = "doc/log/gail/1_log.txt"
+    file = "doc/log/gail/2_log.txt"
     benchmark = {
         "dark": 1314760.0,
         "sebf": 1072680.0,
