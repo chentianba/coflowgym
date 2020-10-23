@@ -11,8 +11,8 @@ def question():
     plt.scatter(result, ep_reward)
     f = np.poly1d(np.polyfit(result, ep_reward, 1))
     plt.plot(result, f(result), 'y')
-    plt.xlabel("Average CCT(second)")
-    plt.ylabel("Total Reward(k)")
+    plt.xlabel("Average CCT(Second)")
+    plt.ylabel("Total Reward(K)")
 
 
 def expSSCF():
@@ -26,19 +26,23 @@ def expSSCF():
         [5.5, 1.9270144E7], [7.5, 1.945452E7],
         [10, 1.8928288E7], [30, 1.4324048E7],
         [40, 1.3929064E7], [45, 1.3927E7],
-        [49, 1.3927112E7],
+        [49, 1.3927112E7],[49.5, 1.3927112E7],
         [50, 1.9272832E7]
     ])
-    x = data[:, 0]
-    y = data[:, 1]
-    plt.plot(x, y, "x-")
+    x = data[:15, 0] # 最高优先级队列阈值，单位MB
+    y = data[:15, 1]/526000 # 平均CCT，单位是秒
+    plt.plot(x, y, linestyle='--')
+    plt.plot(x, y, 'o', c="#1f77b4")
+    plt.xlabel("CCT(Second)")
+    plt.ylabel("First Threshold(MB)")
+
 
 if __name__ == "__main__":
     pass
 
     expSSCF()
 
-    question()
+    # question()
 
     plt.show()
     
