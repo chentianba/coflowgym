@@ -23,6 +23,8 @@ public class CoflowSimulatorDark extends CoflowSimulator {
   public static double INIT_QUEUE_LIMIT = 1048576.0 * 10;
   public static double JOB_SIZE_MULT = 10.0;
 
+  private static boolean isSSCF = false;
+
   Vector<Job>[] sortedJobs;
 
   public ArrayList<Double> queueThresholds;
@@ -34,6 +36,21 @@ public class CoflowSimulatorDark extends CoflowSimulator {
 
     super(sharingAlgo, traceProducer, false, false, 0.0);
     assert (sharingAlgo == SHARING_ALGO.DARK);
+  }
+  /**
+   * {@inheritDoc}
+   */
+  public CoflowSimulatorDark(SHARING_ALGO sharingAlgo, TraceProducer traceProducer, boolean sscf) {
+
+    super(sharingAlgo, traceProducer, false, false, 0.0);
+
+    isSSCF = sscf;
+
+    if (isSSCF) {
+        assert (sharingAlgo == SHARING_ALGO.SSCF);
+    } else {
+        assert (sharingAlgo == SHARING_ALGO.DARK);
+    }
   }
 
   /** {@inheritDoc} */
@@ -184,8 +201,14 @@ public class CoflowSimulatorDark extends CoflowSimulator {
         /**
          * size可以设置为已发送大小和shuffle总大小
          */
-        // double size = j.shuffleBytesCompleted;
-        double size = j.totalShuffleBytes;
+        double size = 0;
+        if (isSSCF) {
+            // System.out.println("shuffle total");
+            size = j.totalShuffleBytes;
+        } else {
+            // System.out.println("shuffle completed");
+            size = j.shuffleBytesCompleted;
+        }
         int curQ = 0;
         // for (double k = INIT_QUEUE_LIMIT; k < size; k *= JOB_SIZE_MULT) {
         //   curQ += 1;

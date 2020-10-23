@@ -27,6 +27,8 @@ public class CoflowSim {
         sharingAlgo = SHARING_ALGO.PFP;
       } else if (UPPER_ARG.contains("FIFO")) {
         sharingAlgo = SHARING_ALGO.FIFO;
+      } else if (UPPER_ARG.contains("SCCF") || UPPER_ARG.contains("SCJF")) {
+        sharingAlgo = SHARING_ALGO.SSCF;
       } else if (UPPER_ARG.contains("SCF") || UPPER_ARG.contains("SJF")) {
         sharingAlgo = SHARING_ALGO.SCF;
       } else if (UPPER_ARG.contains("NCF") || UPPER_ARG.contains("NJF")) {
@@ -115,7 +117,9 @@ public class CoflowSim {
           deadlineMultRandomFactor);
     } else if (sharingAlgo == SHARING_ALGO.DARK) {
       nlpl = new CoflowSimulatorDark(sharingAlgo, traceProducer);
-    } else {
+    } else if (sharingAlgo == SHARING_ALGO.SSCF) {
+        nlpl = new CoflowSimulatorDark(sharingAlgo, traceProducer, true);
+      } else {
       nlpl = new CoflowSimulator(sharingAlgo, traceProducer, isOffline, considerDeadline,
           deadlineMultRandomFactor);
     }

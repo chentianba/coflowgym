@@ -3,9 +3,9 @@ import codecs
 import sys, math
 import pprint
 import matplotlib.pyplot as plt
-from benchdata import exp4_benchmark_data
-from util import toFactor, prepare_pm, parse_benchmark
-import util
+from coflowgym.benchdata import exp4_benchmark_data
+from coflowgym.util import toFactor, prepare_pm, parse_benchmark
+import coflowgym.util
 
 ## DARK / FIFO / SEBF
 configuration = [
@@ -544,7 +544,8 @@ def analyse_log(exp_no):
         plt.ylabel("ep_reward")
 
     ## 
-    if exp_no < 0:
+    if exp_no is 102:
+        ## success-2 log / Facebook
         result, ep_reward = parse_log(("doc/log/success-2/log/log_10.txt"))
         print("Number of samples:", len(result))
         print(len(result))
@@ -573,6 +574,27 @@ def analyse_log(exp_no):
         # plt.plot(cdf[:, 0], cdf[:, 1])
         # plt.xlabel("runtime")
         # plt.ylabel("CDF")
+
+    if exp_no < 0:
+        result, ep_reward = parse_log(("doc/log/success-2/log/log_10.txt"))
+        print("Number of samples:", len(result))
+        print(len(result))
+        # print(result, ",", ep_reward)
+        result, ep_reward = np.array(result), np.array(ep_reward)
+        is_benchmark = True
+
+        # validate_reward(result[result < 350000], ep_reward[result < 350000])
+        plot_compare(result, ep_reward, is_benchmark=is_benchmark, newfigure=False)
+
+        plot_smoothing(range(len(result)), result, "result")
+        add_compare(is_benchmark=is_benchmark)
+
+        plot_smoothing(range(len(ep_reward)), ep_reward, "ep_reward")
+
+        # plt.figure("Exp")
+        # plt.subplot(221)
+        # plt.subplot(222)
+        validate_reward(result, ep_reward, newfigure=True)
 
 def queue_validate():
     bmk_sentsize = prepare_pm()
@@ -614,7 +636,7 @@ def queue_validate():
 
 if __name__ == "__main__":
     
-    analyse_log(-6)
+    analyse_log(102)
 
     # stats_action("log/log.txt")
     

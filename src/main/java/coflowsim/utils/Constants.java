@@ -43,6 +43,10 @@ public class Constants {
      * Use the non-clairvoyant scheduler.
      */
     DARK,
+    /**
+     * Use coflows by total size in MLFQ
+     */
+    SSCF,
   }
 
   /**
