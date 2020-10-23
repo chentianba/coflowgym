@@ -338,8 +338,8 @@ class CoflowKDEEnv(Env):
         result, cf_info = self.getResult()
         print("Result: ", result)
         if self.TEST:
-            print("Test/Result:", result, file=self.test_logger)
-            print("Test/CoflowInfo:", cf_info, file=self.test_logger)
+            self.test_logger.print("Test/Result: %s"%(result))
+            self.test_logger.print("Test/CoflowInfo: %s"%(cf_info))
 
         self.__initialize()
 

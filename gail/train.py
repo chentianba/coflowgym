@@ -13,6 +13,17 @@ from lib.tf2rl.tf2rl.experiments.trainer import Trainer
 # from tf2rl.experiments.irl_trainer import IRLTrainer
 # from tf2rl.experiments.trainer import Trainer
 
+datasource1 = {
+    "source": "./scripts/FB2010-1Hr-150-0.txt", # 2.4247392E7,
+    "test_steps": 450*20, # 450
+}
+datasource2 = {
+    "source": "./scripts/valid_1.txt",
+    "test_steps": 80*20, # 80
+}
+
+datasource = datasource2
+
 def config_env(newInstance=False, test=False):
     if not newInstance:
     # Configure the jpype environment
@@ -22,7 +33,8 @@ def config_env(newInstance=False, test=False):
     java.lang.System.out.println("Hello World!")
     benchmark = "./scripts/FB2010-1Hr-150-0.txt" # 2.4247392E7
     benchmark = "./scripts/valid_1.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] 
+    # args = ["dark", "COFLOW-BENCHMARK", benchmark]
+    args = ["dark", "COFLOW-BENCHMARK", datasource["source"]]
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
@@ -32,10 +44,11 @@ def gail_train():
     parser = IRLTrainer.get_argument()
     parser = GAIL.get_argument(parser)
     parser.add_argument("--logdir", type=str, default="log/results")
+    parser.add_argument('--test-interval', type=int, default=int(datasource["test_steps"]))
     args = parser.parse_args()
 
     env = config_env()
-    test_env = config_env(True, test=True)
+    test_env = config_env(newInstance=True, test=True)
     units = [400, 300]
     policy = DDPG(
         state_shape=env.observation_space.shape,
