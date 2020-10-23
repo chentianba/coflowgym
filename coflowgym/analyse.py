@@ -563,7 +563,7 @@ def analyse_log(exp_no):
         # plt.figure("Exp")
         # plt.subplot(221)
         # plt.subplot(222)
-        # validate_reward(result, ep_reward, newfigure=False)
+        validate_reward(result, ep_reward, newfigure=True)
         # plt.subplot(223)
         # plt.plot(ep_reward)
         # plt.ylabel("ep_reward")
@@ -614,7 +614,7 @@ def queue_validate():
 
 if __name__ == "__main__":
     
-    # analyse_log(-6)
+    analyse_log(-6)
 
     # stats_action("log/log.txt")
     
@@ -630,7 +630,7 @@ if __name__ == "__main__":
 
     # analyse_samples("log/run_8000.txt")
 
-    parse_run_log()
+    # parse_run_log()
     # parse_run_log("log/6_run.txt")
 
     # queue_validate()
