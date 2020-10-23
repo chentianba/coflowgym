@@ -218,7 +218,7 @@ class CoflowSimEnv(Env):
 
 
 class CoflowKDEEnv(Env):
-    def __init__(self, gym, debug=True):
+    def __init__(self, gym, debug=True, isTest=False):
         self.coflowsim = gym
         self.NUM_COFLOW = self.coflowsim.MAX_COFLOW # 10
         self.UNIT_DIM = 4 # id, width/1000, sent_bytes, duration_time/1000
@@ -233,7 +233,10 @@ class CoflowKDEEnv(Env):
         self.action_space = spaces.Box(0, 1, (self.ACTION_DIM,))
 
         self.MB = 1024*1024 # 1MB = ? B
+        self.TEST = isTest
         self.__initialize()
+        if self.TEST:
+            self.test_logger = Logger("log/test_log.txt")
 
         self.debug = debug
 
@@ -334,6 +337,9 @@ class CoflowKDEEnv(Env):
     def reset(self):
         result, cf_info = self.getResult()
         print("Result: ", result)
+        if self.TEST:
+            print("Test/Result:", result, file=self.test_logger)
+            print("Test/CoflowInfo:", cf_info, file=self.test_logger)
 
         self.__initialize()
 

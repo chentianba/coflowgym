@@ -78,12 +78,15 @@ class IRLTrainer(Trainer):
                 obs = next_obs
 
                 if done or episode_steps == self._episode_max_steps:
+                    result, cf_info = self._env.getResult()
                     obs = self._env.reset()
 
                     n_episode += 1
                     fps = episode_steps / (time.perf_counter() - episode_start_time)
                     print("Episode Rewawd: ", ep_reward, file=self.mylogger)
                     print("Final episode_return: ", episode_return, file=self.mylogger)
+                    print("Result:", result, file=self.mylogger)
+                    print("CoflowInfo:", cf_info, file=self.mylogger)
                     self.mylogger.flush()
                     self.logger.info("Total Epi: {0: 5} Steps: {1: 7} Episode Steps: {2: 5} Return: {3: 5.4f} FPS: {4:5.2f}".format(
                         n_episode, int(total_steps), episode_steps, episode_return, fps))

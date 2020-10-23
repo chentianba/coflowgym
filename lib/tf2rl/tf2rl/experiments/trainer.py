@@ -175,6 +175,7 @@ class Trainer:
             episode_return = 0.
             frames = []
             obs = self._test_env.reset()
+            print("Test/Result:", result, file=self.mylogger)
             for _ in range(self._episode_max_steps):
                 action = self._policy.get_action(obs, test=True)
                 next_obs, reward, done, _ = self._test_env.step(action)

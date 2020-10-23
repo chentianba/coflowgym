@@ -13,7 +13,7 @@ from lib.tf2rl.tf2rl.experiments.trainer import Trainer
 # from tf2rl.experiments.irl_trainer import IRLTrainer
 # from tf2rl.experiments.trainer import Trainer
 
-def config_env(newInstance=False):
+def config_env(newInstance=False, test=False):
     if not newInstance:
     # Configure the jpype environment
         jarpath = os.path.join(os.path.abspath("."))
@@ -26,7 +26,7 @@ def config_env(newInstance=False):
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
-    return CoflowKDEEnv(gym)
+    return CoflowKDEEnv(gym, isTest=test)
 
 def gail_train():
     parser = IRLTrainer.get_argument()
@@ -35,7 +35,7 @@ def gail_train():
     args = parser.parse_args()
 
     env = config_env()
-    test_env = config_env(True)
+    test_env = config_env(True, test=True)
     units = [400, 300]
     policy = DDPG(
         state_shape=env.observation_space.shape,
