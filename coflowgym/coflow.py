@@ -243,6 +243,12 @@ class CoflowKDEEnv(Env):
         self.ep_f_coflows = []
 
         self.kde = KDE(list(range(15))*667)
+    
+    def get_proto_actions(self, mlfq_actions):
+        for mlfq in mlfq_actions:
+            for i in range(len(mlfq)):
+                mlfq[i] = self.kde.get_prob(mlfq[i])
+        return mlfq_actions
 
     def step(self, action):
         ## action is from nerual network and we need to convert it into MLFQ thresholds

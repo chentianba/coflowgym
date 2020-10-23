@@ -335,6 +335,11 @@ class KDE():
             p = self.kde.integrate_box(-math.inf, v)
         return v
     
+    def get_prob(self, val):
+        p = self.kde.integrate_box(-math.inf, np.log10(val))
+        p = np.clip(p, 0, 1)*2-1
+        return p
+    
     def print(self):
         x = np.arange(0, 15)
         print("In KDE:", self.kde.pdf(x))

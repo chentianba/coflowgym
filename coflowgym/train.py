@@ -409,8 +409,8 @@ def config_env():
     java.lang.System.out.println("Hello World!")
     testfile = "./scripts/100coflows.txt"
     benchmark = "./scripts/FB2010-1Hr-150-0.txt"
-    # args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
-    args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 3.73975776E8
+    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    # args = ["dark", "COFLOW-BENCHMARK", "./scripts/light_tail.txt"] # 3.73975776E8
     # args = ["dark", "COFLOW-BENCHMARK", testfile] # 326688.0
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_250.txt"] # 1.5923608E7
     # args = ["dark", "COFLOW-BENCHMARK", "./scripts/test_150_200.txt"] # 2214624.0

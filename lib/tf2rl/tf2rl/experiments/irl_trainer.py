@@ -125,7 +125,7 @@ class IRLTrainer(Trainer):
                                 agent_acts=samples["act"],
                                 agent_next_states=samples["next_obs"],
                                 expert_states=self._expert_obs[indices],
-                                expert_acts=self._expert_act[indices],
+                                expert_acts=self._env.get_proto_actions(self._expert_act[indices]),
                                 expert_next_states=self._expert_next_obs[indices])
 
                 if total_steps % self._test_interval == 0:

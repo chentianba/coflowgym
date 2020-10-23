@@ -20,9 +20,9 @@ def config_env(newInstance=False):
         startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=%s/target/coflowsim-0.2.0-SNAPSHOT.jar"%(jarpath), convertStrings=False)
 
     java.lang.System.out.println("Hello World!")
-    benchmark = "./scripts/FB2010-1Hr-150-0.txt"
+    benchmark = "./scripts/FB2010-1Hr-150-0.txt" # 2.4247392E7
     benchmark = "./scripts/valid_1.txt"
-    args = ["dark", "COFLOW-BENCHMARK", benchmark] # 2.4247392E7
+    args = ["dark", "COFLOW-BENCHMARK", benchmark] 
     print("arguments:", args)
     CoflowGym = JClass("coflowsim.CoflowGym")
     gym = CoflowGym(args)
@@ -65,4 +65,7 @@ def read_expert_trajs():
 
 if __name__ == "__main__":
     pass
+    # obses, acts, obs_ns = read_expert_trajs()
+    # print(acts.shape, acts[:10])
+
     gail_train()
