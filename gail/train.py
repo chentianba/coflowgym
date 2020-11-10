@@ -22,7 +22,7 @@ datasource2 = {
     "test_steps": 80*20, # 80
 }
 
-datasource = datasource1
+datasource = datasource2
 
 def config_env(newInstance=False, test=False):
     if not newInstance:

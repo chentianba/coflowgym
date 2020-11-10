@@ -5,11 +5,11 @@ benchmark = {
     "sebf": 1072680.0,
     "fifo": 3963584.0
 }
-benchmark = {
-    "dark": 2.4247392E7,
-    "sebf": 1.5005968E7, 
-    "fifo": 4.3473352E7, 
-}
+# benchmark = {
+#     "dark": 2.4247392E7,
+#     "sebf": 1.5005968E7, 
+#     "fifo": 4.3473352E7, 
+# }
 
 def analyse_reward_list():
     file = "log/log.txt"

@@ -77,11 +77,15 @@ class IRLTrainer(Trainer):
                                   next_obs=next_obs, rew=reward, done=done_flag)
                 obs = next_obs
 
-                if done or episode_steps == self._episode_max_steps:
+                if done or episode_steps == self._episode_max_steps:valid_1
                     result, cf_info = self._env.getResult()
                     obs = self._env.reset()
 
                     n_episode += 1
+                    ## save weights of irl
+                    if n_episode%10 == 0:
+                        self._irl.save_weights(self._output_dir+"/model_%sS%s.h5"%(n_episode, total_steps))
+
                     fps = episode_steps / (time.perf_counter() - episode_start_time)
                     print("Episode Rewawd: ", ep_reward, file=self.mylogger)
                     print("Final episode_return: ", episode_return, file=self.mylogger)
