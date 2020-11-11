@@ -77,7 +77,7 @@ class IRLTrainer(Trainer):
                                   next_obs=next_obs, rew=reward, done=done_flag)
                 obs = next_obs
 
-                if done or episode_steps == self._episode_max_steps:valid_1
+                if done or episode_steps == self._episode_max_steps:
                     result, cf_info = self._env.getResult()
                     obs = self._env.reset()
 
