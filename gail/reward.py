@@ -27,12 +27,8 @@ def train():
     state_shape=env.observation_space.shape
     action_dim=env.action_space.high.size
     units=[400, 300]
-    file = "log/results/20201111T142620.525755_DDPG_GAIL/model_30S2489.h5"
-    # disc_rew = DiscReward(state_shape, action_dim, units, file)
-    # disc_rew.disc
-    f = h5py.File(file)
-    for key, value in f.attrs.items():
-        print("{}: {}".format(key, value))
+    file = "model_10S842.h5"
+    disc_rew = DiscReward(state_shape, action_dim, units, file)
 
 
 if __name__ == "__main__":
