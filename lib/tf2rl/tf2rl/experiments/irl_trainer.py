@@ -139,6 +139,10 @@ class IRLTrainer(Trainer):
                     avg_test_return = self.evaluate_policy(total_steps)
                     self.logger.info("Evaluation Total Steps: {0: 7} Average Reward {1: 5.4f} over {2: 2} episodes".format(
                         total_steps, avg_test_return, self._test_episodes))
+                    
+                    ## save weights of irl in TEST
+                    self._irl.save_weights(self._output_dir+"/model_test_%sS%s.h5"%(total_steps/self._test_interval, total_steps))
+
                     tf.summary.scalar(
                         name="Common/average_test_return", data=avg_test_return)
                     tf.summary.scalar(

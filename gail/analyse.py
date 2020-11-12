@@ -11,6 +11,9 @@ benchmark = {
 #     "fifo": 4.3473352E7, 
 # }
 
+DIR = "results/20201110T181617.829880_DDPG_GAIL/"
+DIR = "results/20201111T142620.525755_DDPG_GAIL/"
+
 def analyse_reward_list():
     file = "log/log.txt"
     with open(file, "r") as f:
@@ -34,7 +37,7 @@ def analyse_reward_list():
 
 def analyse_result_log():
     file = "doc/log/gail/2_log.txt"
-    file = "log/log.txt"
+    file = "log/%slog.txt"%(DIR)
     with open(file, "r") as f:
         line = f.readline()
         results = []
@@ -53,7 +56,7 @@ def analyse_result_log():
         plt.ylabel("Total CCT")
 
 def analyse_test_result_log():
-    file = "log/test_log.txt"
+    file = "log/%stest_log.txt"%(DIR)
     with open(file, "r") as f:
         line = f.readline()
         results = []
