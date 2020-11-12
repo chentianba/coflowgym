@@ -11,8 +11,7 @@ benchmark = {
 #     "fifo": 4.3473352E7, 
 # }
 
-DIR = "results/20201110T181617.829880_DDPG_GAIL/"
-DIR = "results/20201111T142620.525755_DDPG_GAIL/"
+DIR = "results/20201112T141844.150251_DDPG_GAIL/"
 
 def analyse_reward_list():
     file = "log/log.txt"
@@ -47,13 +46,7 @@ def analyse_result_log():
                 if result > 0:
                     results.append(result)
             line = f.readline()
-        plt.plot(results, ".-")
-        plt.plot([0, len(results)], [benchmark["dark"]]*2, "orange")
-        plt.plot([0, len(results)], [benchmark["sebf"]]*2, "r")
-        plt.plot([0, len(results)], [benchmark["fifo"]]*2, "cyan")
-        plt.legend(["GAIL", "Aalo", "SEBF", "FIFO"])
-        plt.xlabel("Episode")
-        plt.ylabel("Total CCT")
+        plot_result_with_ep(results)
 
 def analyse_test_result_log():
     file = "log/%stest_log.txt"%(DIR)
@@ -66,19 +59,45 @@ def analyse_test_result_log():
                 if result > 0:
                     results.append(result)
             line = f.readline()
-        plt.figure()
-        plt.plot(results, ".-")
-        plt.plot([0, len(results)], [benchmark["dark"]]*2, "orange")
-        plt.plot([0, len(results)], [benchmark["sebf"]]*2, "r")
-        plt.plot([0, len(results)], [benchmark["fifo"]]*2, "cyan")
-        plt.legend(["GAIL", "Aalo", "SEBF", "FIFO"])
-        plt.xlabel("Episode")
-        plt.ylabel("Total CCT")
+    plot_result_with_ep(results)
+
+def plot_result_with_ep(results):
+    plt.figure()
+    plt.plot(results, ".-")
+    plt.plot([0, len(results)], [benchmark["dark"]]*2, "orange")
+    plt.plot([0, len(results)], [benchmark["sebf"]]*2, "r")
+    plt.plot([0, len(results)], [benchmark["fifo"]]*2, "cyan")
+    plt.legend(["GAIL", "Aalo", "SEBF", "FIFO"])
+    plt.xlabel("Episode")
+    plt.ylabel("Total CCT")
+
+def analyse_ddpg_reward_log():
+    file = "log/log_ddpg.txt"
+    with open(file, "r") as f:
+        line = f.readline()
+        results = []
+        rewards = []
+        while line:
+            if line.startswith("Result"):
+                result = eval(line.split(":")[-1])
+                if result > 0:
+                    results.append(result)
+            if line.find("ep_reward") != -1:
+                reward = eval(line.split()[-1])
+                rewards.append(reward)
+            line = f.readline()
+    
+    plot_result_with_ep(results)
+
+    plt.figure()
+    plt.scatter(results, rewards)
 
 if __name__ == "__main__":
     pass
-    # analyse_reward_list()
-    analyse_result_log()
+    # analyse_result_log()
 
-    analyse_test_result_log()
+    # analyse_test_result_log()
+
+    analyse_ddpg_reward_log()
+
     plt.show()
