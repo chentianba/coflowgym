@@ -84,7 +84,7 @@ class IRLTrainer(Trainer):
                     n_episode += 1
                     ## save weights of irl
                     if n_episode%10 == 0:
-                        self._irl.save_weights(self._output_dir+"/model_%sS%s.h5"%(n_episode, total_steps))
+                        self._irl.disc.save_weights(self._output_dir+"/model_%sS%s.h5"%(n_episode, total_steps))
 
                     fps = episode_steps / (time.perf_counter() - episode_start_time)
                     print("Episode Rewawd: ", ep_reward, file=self.mylogger)
@@ -141,7 +141,7 @@ class IRLTrainer(Trainer):
                         total_steps, avg_test_return, self._test_episodes))
                     
                     ## save weights of irl in TEST
-                    self._irl.save_weights(self._output_dir+"/model_test_%sS%s.h5"%(total_steps/self._test_interval, total_steps))
+                    self._irl.disc.save_weights(self._output_dir+"/model_test_%sS%s.h5"%(total_steps/self._test_interval, total_steps))
 
                     tf.summary.scalar(
                         name="Common/average_test_return", data=avg_test_return)
