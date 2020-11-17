@@ -60,6 +60,9 @@ class DiscReward:
         with tf.device("/cpu:0"):
             return self.disc.compute_reward([states, actions])
 
+TEST_MODEL = "log/results/20201113T112618.611139_DDPG_GAIL/model_test_2.0S3200.h5"
+TEST_MODEL = "log/results/20201114T122242.197877_DDPG_GAIL/model_test_11.0S17600.h5"
+
 def train():
     env = config_env()
     state_shape=env.observation_space.shape
@@ -67,7 +70,7 @@ def train():
     action_dim=env.action_space.high.size
     print(state_shape, action_dim)
     units=[400, 300]
-    file = "log/results/20201112T141844.150251_DDPG_GAIL/model_test_2.0S3200.h5"
+    file = TEST_MODEL
     disc_rew = DiscReward(state_shape, action_dim, units, file)
     rs = disc_rew.inference(np.zeros((4,40)), np.zeros((4, 9)), None)
     print(np.array(rs))

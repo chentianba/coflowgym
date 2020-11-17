@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt 
+import numpy as np
 
 benchmark = {
     "dark": 1314760.0,
@@ -12,6 +13,9 @@ benchmark = {
 # }
 
 DIR = "results/20201112T141844.150251_DDPG_GAIL/"
+DIR = "results/20201113T112618.611139_DDPG_GAIL/"
+DIR = "results/20201114T122242.197877_DDPG_GAIL/"
+
 
 def analyse_reward_list():
     file = "log/log.txt"
@@ -59,6 +63,9 @@ def analyse_test_result_log():
                 if result > 0:
                     results.append(result)
             line = f.readline()
+    print("Total: ", len(results))
+    print("Index less dark: ", np.where(np.array(results) < benchmark["dark"]))
+    print("Index less sebf: ", np.where(np.array(results) < benchmark["sebf"]))
     plot_result_with_ep(results)
 
 def plot_result_with_ep(results):
@@ -78,7 +85,7 @@ def analyse_ddpg_reward_log():
         results = []
         rewards = []
         while line:
-            if line.startswith("Result"):
+            if line.startswith("result"):
                 result = eval(line.split(":")[-1])
                 if result > 0:
                     results.append(result)
@@ -88,16 +95,23 @@ def analyse_ddpg_reward_log():
             line = f.readline()
     
     plot_result_with_ep(results)
+    # plt.figure("Reward")
+    # plt.plot(rewards, '.-')
 
     plt.figure()
-    plt.scatter(results, rewards)
+    print(len(results), len(rewards))
+    plt.scatter(results[:], rewards[:])
 
 if __name__ == "__main__":
     pass
-    # analyse_result_log()
+    ANALYSE_DDPG = True
+    ANALYSE_DDPG = False
 
-    # analyse_test_result_log()
+    if not ANALYSE_DDPG:
+        analyse_result_log()
 
-    analyse_ddpg_reward_log()
+        analyse_test_result_log()
+    else:
+        analyse_ddpg_reward_log()
 
     plt.show()
