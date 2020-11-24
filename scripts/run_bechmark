@@ -5,5 +5,5 @@ if [ "$1" != "" ]; then
 	policy=$1
 fi
 
-java -cp target/coflowsim-*.jar coflowsim.CoflowSim $policy COFLOW-BENCHMARK /home/chentb/tmp/git/coflow-benchmark/FB2010-1Hr-150-0.txt
-# java -cp target/coflowsim-*.jar coflowsim.CoflowSim $policy COFLOW-BENCHMARK 100coflows.txt
+# java -cp target/coflowsim-*.jar coflowsim.CoflowSim $policy COFLOW-BENCHMARK /home/chentb/tmp/git/coflow-benchmark/FB2010-1Hr-150-0.txt
+java -cp target/coflowsim-*.jar coflowsim.CoflowSim $policy COFLOW-BENCHMARK scripts/valid_1.txt
