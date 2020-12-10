@@ -471,6 +471,11 @@ public abstract class Simulator {
     return resStats;
   }
 
+  public String getCoflowInfo() {
+    String resStats = "";
+    return resStats;
+  }
+
   public void incNumActiveTasks() {
     numActiveTasks++;
   }

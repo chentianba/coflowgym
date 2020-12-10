@@ -46,7 +46,10 @@ class CoflowSimEnv(Env):
         obs = result["observation"]
         obs = self.__parseObservation(obs)
         done = result["done"]
-        mlfq = eval(result["MLFQ"])
+        try:
+            mlfq = eval(result["MLFQ"])
+        except SyntaxError:
+            mlfq = None
         # if self.debug:
         #     logger.print("MLFQ: "+str(mlfq))
         # obs = self.coflowsim.printStats()
@@ -65,7 +68,7 @@ class CoflowSimEnv(Env):
 
         # print("completed: ", [coflow[0] for coflow in c_coflows])
         
-        return obs, reward, done, {"mlfq":mlfq, "obs":result["observation"]}
+        return obs, reward, done, {"mlfq":mlfq, "obs":result["observation"], "completed": result["completed"]}
     
     def __cal_reward_5(self, a_coflows, c_coflows, mlfq):
         r1 = self.__cal_reward_4(a_coflows, c_coflows)
@@ -274,7 +277,10 @@ class CoflowKDEEnv(Env):
         obs = result["observation"]
         obs = self.__parseObservation(obs)
         done = result["done"]
-        mlfq = eval(result["MLFQ"])
+        try:
+            mlfq = eval(result["MLFQ"])
+        except SyntaxError:
+            mlfq = None
         # if self.debug:
         #     logger.print("MLFQ: "+str(mlfq))
         # obs = self.coflowsim.printStats()
@@ -292,7 +298,7 @@ class CoflowKDEEnv(Env):
         self.kde.push(np.log10([e for e in ac if e != 0]))
         self.kde.update()
         
-        return obs, reward, done, {"mlfq":mlfq, "obs":result["observation"]}
+        return obs, reward, done, {"mlfq":mlfq, "obs":result["observation"], "coflows": self.coflowsim.getCoflowInfo()}
 
     def __cal_reward_4(self, a_coflows, c_coflows):
         n = len(self.ep_f_coflows)

@@ -26,6 +26,9 @@ public class CoflowSimulator extends Simulator {
   double[] sendBpsFree;
   double[] recvBpsFree;
 
+  double[] recordSendBpsFree;
+  double[] recordRecvBpsFree;
+
   /**
    * {@inheritDoc}
    */
@@ -49,6 +52,8 @@ public class CoflowSimulator extends Simulator {
 
     this.sendBpsFree = new double[NUM_RACKS];
     this.recvBpsFree = new double[NUM_RACKS];
+    this.recordSendBpsFree = new double[NUM_RACKS];
+    this.recordRecvBpsFree = new double[NUM_RACKS];
     resetSendRecvBpsFree();
 
     this.sortedJobs = new Vector<Job>();
@@ -259,6 +264,10 @@ public class CoflowSimulator extends Simulator {
         }
       }
     }
+    // recordSendBpsFree = sendBpsFree
+    // recordRecvBpsFree = recvBpsFree
+    // System.arraycopy(sendBpsFree, 0, recordSendBpsFree, 0, NUM_RACKS);
+    // System.arraycopy(recvBpsFree, 0, recordRecvBpsFree, 0, NUM_RACKS);
   }
 
   /**
@@ -550,4 +559,12 @@ public class CoflowSimulator extends Simulator {
       return o1.alpha < o2.alpha ? -1 : 1;
     }
   };
+
+  @Override
+  public String getCoflowInfo() {
+    String resStats = "";
+    System.out.println("Send:"+Arrays.toString(recordSendBpsFree));
+    System.out.println("Receive:"+Arrays.toString(recordRecvBpsFree));
+    return resStats;
+  }
 }

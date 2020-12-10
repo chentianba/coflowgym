@@ -576,12 +576,14 @@ def analyse_log(exp_no):
         # plt.ylabel("CDF")
 
     if exp_no < 0:
-        result, ep_reward = parse_log(("doc/log/success-2/log/log_10.txt"))
+        # result, ep_reward = parse_log(("doc/log/success-2/log/log_10.txt"))
+        # result, ep_reward = parse_log("E:/@Data/programming/coflowgym/doc/log/lighttail/best_run_log.txt")
+        result, ep_reward = parse_log("E:/@Data/programming/coflowgym/doc/log/lighttail/log/log_10.txt")
         print("Number of samples:", len(result))
         print(len(result))
         # print(result, ",", ep_reward)
         result, ep_reward = np.array(result), np.array(ep_reward)
-        is_benchmark = True
+        is_benchmark = False
 
         # validate_reward(result[result < 350000], ep_reward[result < 350000])
         plot_compare(result, ep_reward, is_benchmark=is_benchmark, newfigure=False)
@@ -636,7 +638,7 @@ def queue_validate():
 
 if __name__ == "__main__":
     
-    analyse_log(102)
+    analyse_log(-102)
 
     # stats_action("log/log.txt")
     

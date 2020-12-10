@@ -1,4 +1,9 @@
 import tensorflow as tf
+## 解决兼容性问题
+if eval(tf.__version__.split(".")[0]) == 2:
+    import tensorflow.compat.v1 as tf 
+    tf.disable_eager_execution()
+
 import numpy as np
 import numpy.random as nr
 import gym
@@ -152,7 +157,9 @@ class DDPG(object):
     def load(self, filename="./model.ckpt"):
         saver = tf.train.Saver()
         with tf.Session() as sess:
+            print("In load(): before")
             saver.restore(self.sess, filename)
+            print("In load():after")
     
     def __str__(self):
         return "class = %s, LR_A = %s, LR_C = %s, GAMMA = %s, TAU = %s, MEMORY_CAPACITY = %s, BATCH_SIZE = %s, a_dim = %s, s_dim = %s, a_bound = %s"%(self.__class__.__name__, self.LR_A, self.LR_C, self.GAMMA, self.TAU, self.MEMORY_CAPACITY, self.BATCH_SIZE, self.a_dim, self.s_dim, self.a_bound)
@@ -320,10 +327,12 @@ def validate():
 if __name__ == "__main__":
     # sys.stdout = open("log/%s-log.txt"%(ENV_NAME), "w")
 
-    TRAINABLE = True
-    # TRAINABLE = False
-    if TRAINABLE:
-        train()
-    else:
-        validate()
+    # TRAINABLE = True
+    # # TRAINABLE = False
+    # if TRAINABLE:
+    #     train()
+    # else:
+    #     validate()
     pass
+    version = tf.__version__
+    print(version, type(version), )

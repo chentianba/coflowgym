@@ -14,7 +14,7 @@ import coflowsim.utils.Constants;
 import coflowsim.utils.Constants.SHARING_ALGO;
 
 public class CoflowGym {
-    private Simulator simulator;
+    public Simulator simulator;
     private String[] input;
 
     public static int MAX_COFLOW = 10;
@@ -22,7 +22,7 @@ public class CoflowGym {
     public CoflowGym(String[] args) {
         input = args;
         this.initializeSimulator();
-        assert this.simulator.getClass().equals(CoflowSimulatorDark.class);
+        // assert this.simulator.getClass().equals(CoflowSimulatorDark.class);
     }
 
     /**
@@ -68,11 +68,18 @@ public class CoflowGym {
         // System.out.println(this.simulator instanceof CoflowSimulatorDark);
     }
 
+    /**
+    return complete information of every coflow.
+     */
+    public String getCoflowInfo() {
+        return this.simulator.getCoflowInfo();
+    }
+
     public void takeAction(double[] thresholds) {
         boolean flag = false;
         flag = this.simulator.setThreshold(thresholds);
         if (!flag) {
-            System.err.println("Action doesn't take effect!");
+            // System.err.println("Action doesn't take effect!");
         }
     }
 

@@ -3,7 +3,7 @@ import numpy as np
 import numpy.random as nr
 import gym
 import time, copy
-from algo.ddpg import OUNoise, DDPG
+from coflowgym.algo.ddpg import OUNoise, DDPG
 
 ###############################  DDPG with LSTM  ####################################
 

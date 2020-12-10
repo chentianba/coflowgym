@@ -2,11 +2,11 @@ import sys, time, os, math
 from jpype import *
 import numpy as np
 
-from algo.ddpg import DDPG, OUNoise
-from algo.ddpg_lstm import DDPG_LSTM
-from algo.ddpg_prob import DDPGProb
-from coflow import CoflowSimEnv
-from util import get_h_m_s, get_now_time, KDE, prepare_pm
+from coflowgym.algo.ddpg import DDPG, OUNoise
+from coflowgym.algo.ddpg_lstm import DDPG_LSTM
+from coflowgym.algo.ddpg_prob import DDPGProb
+from coflowgym.coflow import CoflowSimEnv
+from coflowgym.util import get_h_m_s, get_now_time, KDE, prepare_pm
 
 if not os.path.exists("./models"):
     os.mkdir("./models")

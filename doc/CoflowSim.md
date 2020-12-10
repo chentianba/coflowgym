@@ -44,6 +44,20 @@
 6. 对将调度的每条流按照计算好的带宽，更新对应Flow、Task、Job字节数
 ```
 
+**打印结果信息的格式**：  
+`JOB-1 0.0 8.0 1 1 1048576.0 1048576.0 8.0 8 8.0`
+* 作业名：包含作业编号
+* 模拟开始时间
+* 模拟结束时间
+* Mapper数量
+* Reducer数量
+* 总Shuffle字节数
+* 最大Shuffle字节数：一个Reducer能接收的最大数据
+* 持续时间：调用`getSimulatedDuration`得到，模拟结束时间和模拟开始时间之差
+* 截止时间：
+* 模拟时间之和：各个Reducer接收数据的时间之和
+
+
 ### 3. CoflowSimulator
 
 **sortedJobs**：类型为`Vector<Job>`  

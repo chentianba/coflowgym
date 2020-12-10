@@ -3,6 +3,17 @@ from datetime import datetime
 import os, sys, math
 from scipy.stats import gaussian_kde
 
+def get_x_y(data):
+    """
+    plot CDF and return x, y of CDF
+    """
+    hist, bin_edges = np.histogram(data, bins=100)
+    # print("range of data:", min(data), max(data))
+    # print(hist, bin_edges)
+    x = [(bin_edges[i]+bin_edges[i+1])/2 for i in range(len(bin_edges)-1)]
+    y = hist.cumsum()/len(data)
+    return x, y
+    
 def chengji(x):
     """
     calculate the product of x, e.g. [2,3,5]->30
