@@ -51,7 +51,7 @@ more-itertools==7.1.0
 msgpack==0.6.1
 netaddr==0.7.19
 numpy==1.16.4
-opencv-python==4.1.0.25
+opencv-python==4.1.1.26
 openpyxl==2.6.4
 ordered-set==3.1.1
 oslo.config==6.9.0
